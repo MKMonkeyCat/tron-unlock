@@ -1,10 +1,10 @@
 import { SVG_EXPERIMENT, SVG_WARN } from '@/assets/svg';
 import type { Feature, FeatureModule } from '@/feature';
-import { getI18nForLang, skipHookFunc } from '@/utils';
+import { skipHookFunc } from '@/utils';
 import { createElement, createSvgFromString } from '@/utils/dom';
+import { K, type TranslationKey } from '@/utils/i18n';
 import type { BaseStateType } from '@/utils/state';
 
-import i18n from './_i18n.json';
 import { createTooltip } from './floating';
 
 export const buildContentUI = <T extends BaseStateType>(
@@ -42,16 +42,16 @@ export const buildContentUI = <T extends BaseStateType>(
       const wrapper = createElement('div', 'mk-settings-feature-base-wrapper');
       wrapper.append(labelText);
 
-      const createTag = (svgString: string, tooltipText: string) => {
+      const createTag = (svgString: string, tooltipKey: TranslationKey) => {
         const tag = createElement('div', 'mk-tag');
         tag.append(createSvgFromString(svgString));
-        createTooltip(tag, tooltipText);
+        createTooltip(tag, tooltipKey);
         return tag;
       };
 
       if (feature.options.liveReload === false) {
         labelText.append(
-          createTag(SVG_WARN, getI18nForLang(i18n).needLiveReloadTooltip)
+          createTag(SVG_WARN, K['control-panel'].needLiveReloadTooltip)
         );
       }
 
@@ -59,7 +59,7 @@ export const buildContentUI = <T extends BaseStateType>(
         labelText.append(
           createTag(
             SVG_EXPERIMENT,
-            getI18nForLang(i18n).experimentalFeatureTooltip
+            K['control-panel'].experimentalFeatureTooltip
           )
         );
       }

@@ -1,9 +1,6 @@
-import {
-  DEFAULT_LANGUAGE_CODE,
-  type LanguageCode,
-  skipHookFunc,
-} from '@/utils';
+import { skipHookFunc } from '@/utils';
 import { win } from '@/utils/hook/utils';
+import { DEFAULT_LANGUAGE_CODE, type LanguageCode } from '@/utils/i18n';
 import {
   type BaseStateType,
   type ChangeListener,

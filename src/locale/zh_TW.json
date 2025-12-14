@@ -1,0 +1,15 @@
+{
+  "control-panel": {
+    "execute": "執行",
+    "toggle": {
+      "on": "開啟",
+      "off": "關閉"
+    },
+    "settings": {
+      "title": "設定面板",
+      "searchPlaceholder": "搜尋設定..."
+    },
+    "needLiveReloadTooltip": "該功能需要重新載入頁面以生效",
+    "experimentalFeatureTooltip": "此功能為實驗性質，可能會有不穩定或不相容的情況，請謹慎使用"
+  }
+}

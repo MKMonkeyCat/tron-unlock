@@ -1,3 +1,11 @@
+import type {
+  DEFAULT_LANGUAGE_CODE,
+  LanguageCode,
+  TranslationKey,
+} from '@/utils/i18n';
+import type { BaseStateType } from '@/utils/state';
+import type { MaybePromise } from '@/utils/type';
+
 export type FeatureContext<T extends BaseStateType> = {
   custom: Record<string, unknown>;
   module: FeatureModule<T>;
@@ -11,7 +19,7 @@ export type BaseStateToString<T> = {
 };
 
 export type FeatureModuleMessageFull<T extends BaseStateType> = {
-  module: { name: string; description?: string };
+  module: { name: TranslationKey; description?: TranslationKey };
   groups?: { [K in keyof T]?: string };
 } & BaseStateToString<T>;
 

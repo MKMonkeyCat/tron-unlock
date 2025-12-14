@@ -1,6 +1,7 @@
 import { waitForElement } from '@/utils/dom';
 
-import { type CleanupFn } from '..';
+import type { CleanupFn } from '../type';
+
 import type { defaultConfig, ExamFeatureModule } from '.';
 
 const cleanups: CleanupFn<typeof defaultConfig>[] = [];

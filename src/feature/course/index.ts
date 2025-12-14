@@ -1,4 +1,4 @@
-import i18n from './_i18n.json';
+// import i18n from './_i18n.json';
 import { registerLearningActivityFeature } from './learning-activity';
 
 import type { FeatureManager } from '..';
@@ -12,7 +12,7 @@ export const defaultConfig = {
 };
 
 export const registerCourseModule = (moduleManager: FeatureManager) => {
-  const courseFeatureModule = new FeatureModule('course', defaultConfig, i18n);
+  const courseFeatureModule = new FeatureModule('course', defaultConfig);
 
   registerLearningActivityFeature(courseFeatureModule);
 

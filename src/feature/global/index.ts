@@ -1,4 +1,4 @@
-import i18n from './_i18n.json';
+// import i18n from './_i18n.json';
 import { registerEventHookFeature } from './event-hook';
 import { registerFooterFeature } from './footer';
 import { registerMenuFeature } from './menu';
@@ -27,7 +27,8 @@ export const defaultConfig = {
 };
 
 export const registerGlobalModule = (moduleManager: FeatureManager) => {
-  const globalFeatureModule = new FeatureModule('global', defaultConfig, i18n);
+  // i18n
+  const globalFeatureModule = new FeatureModule('global', defaultConfig);
 
   registerEventHookFeature(globalFeatureModule);
   registerFooterFeature(globalFeatureModule);

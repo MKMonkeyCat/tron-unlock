@@ -1,4 +1,5 @@
 import { skipHookFunc } from '@/utils';
+import type { TranslationKey } from '@/utils/i18n';
 
 import { createElement, createStyle } from '../utils/dom';
 import { bound } from '../utils/hook/utils';
@@ -339,7 +340,7 @@ const createPanel = (
 // TODO add more options like delay, interactive, etc.
 export const createTooltip = (
   trigger: HTMLElement,
-  content: string | HTMLElement,
+  content: TranslationKey | HTMLElement,
   opt?: FloatingOptions
 ): FloatingUI => {
   return new FloatingUI(

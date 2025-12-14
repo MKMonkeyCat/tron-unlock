@@ -1,7 +1,7 @@
 import { featureManager } from '@/feature';
-import { getI18nForLang, skipHookFunc } from '@/utils';
+import { skipHookFunc } from '@/utils';
+import { bindText, K } from '@/utils/i18n';
 
-import i18n from './_i18n.json';
 import { buildContentUI } from './contentBuild';
 import { createTooltip } from './floating';
 
@@ -10,7 +10,7 @@ import { createElement } from '#/dom';
 export const buildSettingsPanel = (panel: HTMLElement, onClose: () => void) => {
   // Title
   const title = createElement('div', 'mk-settings-title');
-  title.textContent = getI18nForLang(i18n).settings?.title ?? 'Settings';
+  bindText(title, K['control-panel'].settings.title);
   panel.append(title);
 
   // Tabs
@@ -23,16 +23,16 @@ export const buildSettingsPanel = (panel: HTMLElement, onClose: () => void) => {
   ).entries()) {
     const moduleInfo = module.getI18N()?.module;
     const moduleContentEl = buildContentUI(id, module);
-    const label = moduleInfo?.name ?? id;
-    const description = moduleInfo?.description ?? '';
+    const label = moduleInfo?.name;
+    const description = moduleInfo?.description;
     tabContents[id] = moduleContentEl;
 
     const btn = createElement('button', 'mk-settings-tab');
-    btn.textContent = `${label}`;
+    if (label) bindText(btn, label);
+    else btn.textContent = id;
     btn.dataset.tab = id;
 
-    createTooltip(btn, description, {});
-
+    if (description) createTooltip(btn, description);
     if (index === 0) {
       moduleContentEl.classList.add('active');
       btn.classList.add('active');
