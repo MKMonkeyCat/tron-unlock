@@ -1,6 +1,6 @@
 # TronUnlock - TronClass 前端研究與功能優化腳本
 
-![TronUnlock Logo](./public/logo.png)
+<img src="./public/logo.png" alt="TronUnlock Logo" width="200" />
 
 > 使用 TypeScript + Vite 開發的前端用戶腳本，主要用於學術研究與前端行為分析。  
 > ⚠ 本專案僅供學術研究與學習用途，**禁止用於任何未授權或非法行為**。
