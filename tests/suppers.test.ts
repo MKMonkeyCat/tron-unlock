@@ -20,7 +20,7 @@ const checkDomain = async (domain: string) => {
     if (!regex.test(text)) {
       const snippet = text.slice(0, 300).replace(/\s+/g, ' ');
       throw new Error(
-        `[${domain}] Missing pattern "${name}"\nRegex: ${regex}\nSnippet: "${snippet}..."`
+        `[${domain}] Missing pattern "${name}"\nRegex: ${regex}\nSnippet: "${snippet}..."`,
       );
     }
   }
@@ -39,15 +39,15 @@ const IGNORE_DOMAINS: (typeof LEARNING_PLATFORM_DOMAINS)[number][] = [
 describe('Suppers Domain', () => {
   test('should validate all domains with crawler', async () => {
     const targets = LEARNING_PLATFORM_DOMAINS.filter(
-      (domain) => !IGNORE_DOMAINS.includes(domain) && !domain.includes('*')
+      (domain) => !IGNORE_DOMAINS.includes(domain) && !domain.includes('*'),
     );
 
     await Promise.all(
       targets.map((domain) =>
         checkDomain(domain).catch((err) => {
           throw new Error(`❌ [${domain}] FAILED:\n${err.message}`);
-        })
-      )
+        }),
+      ),
     );
   }, 30_000);
 });

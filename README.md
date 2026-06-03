@@ -1,4 +1,6 @@
-# TronClass 前端研究與功能優化腳本
+# TronUnlock - TronClass 前端研究與功能優化腳本
+
+![TronUnlock Logo](./public/logo.png)
 
 > 使用 TypeScript + Vite 開發的前端用戶腳本，主要用於學術研究與前端行為分析。  
 > ⚠ 本專案僅供學術研究與學習用途，**禁止用於任何未授權或非法行為**。
@@ -27,8 +29,8 @@
 1. 下載或 clone 本專案：
 
 ```bash
-git clone https://github.com/a3510377/ulearn-script.git
-cd ulearn-script
+git clone https://github.com/MKMonkeyCat/tron-unlock.git
+cd tron-unlock
 ```
 
 2. 安裝依賴套件：
@@ -49,7 +51,7 @@ yarn build
 
 4. 將 `dist` 目錄下的腳本安裝到 **Tampermonkey**。
 
-5. 開啟 **虎尾科技大學 ULearn 平台**，腳本將自動啟用。
+5. 開啟 **相關 ULearn/TronClass 網站**，腳本將自動啟用。
 
 ## 功能概述
 
@@ -76,7 +78,6 @@ yarn build
 
 6. **安全風險**
    使用本腳本可能涉及個人資訊、帳號密碼或設備安全風險，包括但不限於：
-
    - 個人資料或帳號資訊洩露
    - 系統或瀏覽器錯誤導致資料損失
    - 潛在與第三方軟體互相影響的風險

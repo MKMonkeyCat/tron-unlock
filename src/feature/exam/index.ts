@@ -1,22 +1,12 @@
-import { registerMarkFeature } from './mark';
+import type { FeatureControlModule, PluginGroupIDMap } from '@/plugin';
 
-import type { FeatureManager } from '..';
-import { FeatureModule } from '..';
+import { createExamMiscPlugins, ExamMiscPluginId } from './misc';
 
-export const defaultConfig = {
-  mark: {
-    examMark: true,
-  },
-};
+export const ExamFeaturePluginId = {
+  ...ExamMiscPluginId,
+} as const satisfies PluginGroupIDMap;
 
-export const registerExamModule = (moduleManager: FeatureManager) => {
-  const examFeatureModule = new FeatureModule('exam', defaultConfig);
-
-  registerMarkFeature(examFeatureModule);
-
-  moduleManager.register('exam', examFeatureModule);
-
-  return examFeatureModule;
-};
-
-export type ExamFeatureModule = ReturnType<typeof registerExamModule>;
+export const createExamFeatureModule = (): FeatureControlModule => ({
+  id: 'exam',
+  plugins: [...createExamMiscPlugins()],
+});

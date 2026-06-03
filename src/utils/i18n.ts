@@ -1,174 +1,203 @@
-import zhTWTranslations from '@/locale/zh_TW.json';
+import { skipHookFunc } from '@/hook';
 
-import { dynamicElementWatcher } from '.';
+import { format } from './format';
 
-// All TronClass supported language codes, but not all are fully translated yet
-export const SUPPORTED_LANGUAGE_CODES = [
-  'zh-TW',
-  'zh-CN',
-  'zh-MO',
-  'en-US',
-  'en-GB',
-  'th-TH',
-  'id-ID',
-  'ms-MY',
-  'vi-VN',
-] as const;
+import { isDict } from '.';
 
-export const createTranslations = (): Translations => ({
-  'zh-TW': zhTWTranslations,
-  'zh-CN': {},
-  'zh-MO': {},
-  'en-US': {},
-  'en-GB': {},
-  'th-TH': {},
-  'id-ID': {},
-  'ms-MY': {},
-  'vi-VN': {},
-});
+export const SUPPORTED_LANGUAGES = {
+  en: 'English',
+  zh_TW: '中文（繁體）',
+  zh_CN: '中文（簡體）',
+} as const;
+export type LanguageCode = keyof typeof SUPPORTED_LANGUAGES;
 
-export const DEFAULT_LANGUAGE_CODE = 'zh-TW';
-export const USER_LANGUAGE_CODE: LanguageCode = (() => {
-  const lang = navigator.language || navigator.languages[0] || 'zh-TW';
-  if (SUPPORTED_LANGUAGE_CODES.includes(lang as LanguageCode)) {
-    return lang as LanguageCode;
+export const DEFAULT_LOCALE = 'zh_TW' as const;
+const STORAGE_KEY = 'user_language';
+
+const LANGUAGE_STORAGE = {
+  get: (key: string) => localStorage.getItem(key),
+  set: (key: string, lang: LanguageCode) => localStorage.setItem(key, lang),
+};
+
+const FALLBACK_MAP: Record<string, LanguageCode> = {
+  en: 'en',
+  zh: 'zh_TW',
+};
+
+//#region I18n Manager
+
+export class I18nManager {
+  #_key: string;
+  #_currentLanguage: LanguageCode;
+  #_subscribers = new Set<(lang: LanguageCode) => void>();
+  #_watcherUninstall: (() => void) | null = null;
+
+  constructor(key?: string) {
+    this.#_key = key ?? STORAGE_KEY;
+    this.#_currentLanguage = getAppLanguage(this.#_key);
   }
 
-  if (lang.startsWith('zh')) return 'zh-TW';
-
-  return DEFAULT_LANGUAGE_CODE;
-})();
-
-export class I18n {
-  private _locale: LanguageCode;
-  private _translations: Translations;
-  private _cache: Map<string, string> = new Map();
-  private _listeners = new Set<LocaleListener>();
-
-  constructor(options: I18nOptions) {
-    this._locale = options.locale;
-    this._translations = options.translations;
+  get currentLanguage() {
+    return this.#_currentLanguage;
   }
 
-  onLocaleChange(fn: LocaleListener, signal?: AbortSignal): () => void {
-    this._listeners.add(fn);
+  set currentLanguage(lang: LanguageCode) {
+    if (lang === this.#_currentLanguage) return;
 
-    if (signal) {
-      signal.addEventListener('abort', () => {
-        this._listeners.delete(fn);
-      });
-    }
-
-    return () => this._listeners.delete(fn);
+    this.#_currentLanguage = lang;
+    LANGUAGE_STORAGE.set(this.#_key, lang);
+    this.#_subscribers.forEach((callback) => callback(lang));
   }
 
-  get locale(): LanguageCode {
-    return this._locale;
-  }
+  initWatcher() {
+    if (this.#_watcherUninstall) return;
 
-  setLocale(locale: LanguageCode) {
-    if (this._locale !== locale) {
-      this._locale = locale;
-      this._cache.clear();
-      this._listeners.forEach((fn) => fn(locale));
-    }
-  }
+    window.addEventListener('storage', this.#handleStorageChange);
+    window.addEventListener('languagechange', this.#handleLanguageChange);
 
-  t(key: TranslationKey | (string & {})): string {
-    const cached = this._cache.get(key);
-    if (cached !== undefined) return cached;
+    this.#_watcherUninstall = () => {
+      window.removeEventListener('storage', this.#handleStorageChange);
+      window.removeEventListener('languagechange', this.#handleLanguageChange);
 
-    const getValue = (obj: any, path: string): string | undefined => {
-      const value = path.split('.').reduce((curr, k) => curr?.[k], obj);
-      return typeof value === 'string' ? value : undefined;
+      this.#_watcherUninstall = null;
     };
 
-    const dict = this._translations[this._locale];
-    console.log(dict, key);
-    const zh_TW = this._translations['zh-TW'];
-    const result = getValue(dict, key) ?? getValue(zh_TW, key) ?? key;
+    return this.#_watcherUninstall;
+  }
 
-    this._cache.set(key, result);
-    return result;
+  uninstallWatcher() {
+    this.#_watcherUninstall?.();
+  }
+
+  subscribe(callback: (lang: LanguageCode) => void, signal?: AbortSignal) {
+    if (signal?.aborted) return () => {};
+
+    this.#_subscribers.add(callback);
+
+    const unsubscribe = skipHookFunc(() => {
+      this.#_subscribers.delete(callback);
+    });
+
+    signal?.addEventListener('abort', unsubscribe, { once: true });
+
+    return unsubscribe;
+  }
+
+  #handleStorageChange = skipHookFunc((e: StorageEvent) => {
+    if (e.key === this.#_key) this.#handleLanguageChange();
+  });
+
+  #handleLanguageChange = skipHookFunc(() => {
+    const currentLang = getAppLanguage(this.#_key);
+    if (currentLang === this.#_currentLanguage) return;
+
+    this.#_currentLanguage = currentLang;
+    this.#_subscribers.forEach((callback) => callback(currentLang));
+  });
+}
+
+//#region I18n Context
+
+export class I18nContext<T extends Translations> {
+  #_manager: I18nManager;
+  translations: T;
+
+  constructor(translations: T, manager?: I18nManager) {
+    this.#_manager = manager ?? new I18nManager();
+    this.translations = translations;
+  }
+
+  t<K extends string & TranslationKeysOf<T>>(
+    key: K,
+    ...args: unknown[]
+  ): GetPathType<T[typeof DEFAULT_LOCALE], K> {
+    const lang = this.#_manager.currentLanguage;
+    const targetDict =
+      this.translations[lang] ?? this.translations[DEFAULT_LOCALE];
+
+    const cleanPath = key.replace(/(\{\}|\[\])$/, '');
+    const parts = cleanPath.split('.').filter(Boolean);
+
+    let current: unknown = targetDict;
+    for (const part of parts) {
+      if (isDict(current) && part in current) {
+        current = current[part];
+      } else return key as unknown as GetPathType<T[typeof DEFAULT_LOCALE], K>;
+    }
+
+    return format(String(current), ...args) as GetPathType<
+      T[typeof DEFAULT_LOCALE],
+      K
+    >;
   }
 }
 
-type NestedKeyOf<T extends Record<string, any>> = {
-  [K in keyof T & string]: T[K] extends string
-    ? K
-    : T[K] extends Record<string, any>
-    ? `${K}` | `${K}.${NestedKeyOf<T[K]>}`
+//#region Language Matching
+
+const matchLanguage = (rawLang?: string | null): LanguageCode | null => {
+  if (!rawLang) return null;
+  const normalized = rawLang.replace('-', '_');
+  if (normalized in SUPPORTED_LANGUAGES) return normalized as LanguageCode;
+
+  const [short] = normalized.split('_');
+  if (!short) return null;
+  if (short in SUPPORTED_LANGUAGES) return short as LanguageCode;
+
+  return FALLBACK_MAP[short] || null;
+};
+
+export const getAppLanguage = (key?: string): LanguageCode => {
+  return (
+    matchLanguage(LANGUAGE_STORAGE.get(key ?? STORAGE_KEY)) ??
+    matchLanguage(navigator.language || navigator.languages?.[0]) ??
+    DEFAULT_LOCALE
+  );
+};
+
+//#region I18n Types
+
+export type TranslationDict = {
+  [key: string]: string | string[] | TranslationDict;
+};
+export type Translations = { [DEFAULT_LOCALE]: TranslationDict } & {
+  [L in LanguageCode]?: TranslationDict;
+};
+
+// prettier-ignore
+export type GetPathType<T, K extends string> = 
+  K extends `${infer Head}.${infer Tail}`
+    ? Head extends keyof T
+      ? GetPathType<T[Head], Tail>
+      : never
+    : K extends string 
+      ? K extends `${infer Base}[]`
+        ? Base extends keyof T ? T[Base] : never
+        : K extends `${infer Base}{}`
+          ? Base extends keyof T ? T[Base] : never
+          : K extends keyof T ? T[K] : never
+      : never;
+
+export type ExtractKeys<T, Prefix extends string = ''> = {
+  [K in keyof T]: K extends string
+    ? T[K] extends string | string[]
+      ? `${Prefix}${K}` | (T[K] extends string[] ? `${Prefix}${K}[]` : never)
+      : T[K] extends TranslationDict
+        ? `${Prefix}${K}{}` | ExtractKeys<T[K], `${Prefix}${K}.`>
+        : never
     : never;
 }[keyof T & string];
 
-const createKeys = <T extends Record<string, any>>(
-  obj: T,
-  prefix = ''
-): Record<string, any> => {
-  return Object.entries(obj).reduce((result, [key, value]) => {
-    const fullKey = prefix ? `${prefix}.${key}` : key;
-
-    result[key] =
-      typeof value === 'string' ? fullKey : createKeys(value, fullKey);
-
-    return result;
-  }, {} as Record<string, any>);
-};
-
-export const bindText = (
-  el: HTMLElement,
-  key: TranslationKey,
-  attr: 'textContent' | 'innerText' = 'textContent',
-  i18n: I18n = i18nInstance
-) => {
-  const ctrl = new AbortController();
-  const render = () => (el[attr] = i18n.t(key));
-
-  render();
-  i18n.onLocaleChange(render, ctrl.signal);
-  dynamicElementWatcher(el, () => ctrl.abort());
-};
-
-export const K = createKeys(zhTWTranslations) as BuildKeys<
-  typeof zhTWTranslations
+export type TranslationKeysOf<T extends Translations> = ExtractKeys<
+  T[typeof DEFAULT_LOCALE]
 >;
-export const translations = createTranslations();
-export const i18nInstance = new I18n({
-  locale: USER_LANGUAGE_CODE,
-  translations,
-});
-export const t: TranslateFn = (key) => i18nInstance.t(key);
 
-type LocaleListener = (locale: LanguageCode) => void;
-
-type BuildKeys<T, Prefix extends string = ''> = {
-  [K in keyof T]: T[K] extends string
-    ? Prefix extends ''
-      ? `${K & string}`
-      : `${Prefix}.${K & string}`
-    : T[K] extends Record<string, any>
-    ? BuildKeys<
-        T[K],
-        Prefix extends '' ? K & string : `${Prefix}.${K & string}`
-      > & {
-        [P in Prefix extends ''
-          ? K & string
-          : `${Prefix}.${K & string}`]: Prefix extends ''
-          ? `${K & string}`
-          : `${Prefix}.${K & string}`;
-      }
-    : never;
-};
-
-export type TranslationKey = NestedKeyOf<typeof zhTWTranslations>;
-export type TranslateFn = (key: TranslationKey) => string;
-export type LanguageCode = (typeof SUPPORTED_LANGUAGE_CODES)[number];
-export type TranslationDict = Record<string, any>;
-export type Translations = Record<LanguageCode, TranslationDict>;
-
-export interface I18nOptions {
-  locale: LanguageCode;
-  translations: Translations;
-}
-
-export default I18n;
+// type MyTrans = {
+//   zh_TW: {
+//     user: { name: string; tags: string[]; settings: { theme: string } };
+//   };
+// };
+//
+// const i18n = new I18nContext({} as MyTrans);
+// const name = i18n.t('user.name');
+// const tags = i18n.t('user.tags[]');
+// const theme = i18n.t('user.settings{}');

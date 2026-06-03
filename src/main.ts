@@ -1,8 +1,5 @@
 import { GITHUB_REPO_URL, VERSION } from './constants';
-import { featureManager } from './feature';
-import { initSettingsMenu } from './view/index';
-
-import './style';
+import { initializeFeatures } from './feature';
 
 const printArtLog = () => {
   const art = `%c
@@ -21,30 +18,20 @@ const printArtLog = () => {
     'color:#00d4ff;font-weight:bold;font-size:8px;',
     'padding:5px 8px;background:#ee5566;color:#fff;border-radius:4px 0 0 4px;font-size:12px;',
     'padding:4.5px 8px;border:1px solid #ee5566;border-radius:0 4px 4px 0;',
-    ''
+    '',
   );
 };
 
-const main = async () => {
-  const { host, pathname } = location;
+printArtLog();
 
-  printArtLog();
+(async () => {
+  await initializeFeatures();
+})();
 
-  // 跳過 TronClass 官方首頁
-  if (/(.+\.)?tronclass\.com(\.tw)?/.test(host) && pathname === '/') {
-    return;
-  }
-
-  await featureManager.init();
-
-  // Initialize all components
-  try {
-    initSettingsMenu();
-  } catch (error) {
-    console.error('Initialization error:', error);
-  }
-
-  // window.addEventListener('hashchange', () => main());
-};
-
-main();
+if (import.meta.env.DEV) {
+  console.log(
+    '%c DevTools Plugin Template %c',
+    'color: #fff; background: linear-gradient(90deg, #ff7e5f, #feb47b); padding: 4px 8px; border-radius: 4px;',
+    '',
+  );
+}

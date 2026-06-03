@@ -1,57 +1,65 @@
-import { MK_CUSTOM_COMPONENT, MK_HIDDEN_SCROLL_CLASS } from './constants';
-import { createStyle } from './utils/dom';
+import {
+  MK_BASE_CLASS,
+  MK_HIDDEN_CLASS,
+  MK_HIDDEN_SCROLL_CLASS,
+} from './constants';
+import { injectStyle } from './utils/dom/style';
 
-export const defaultStyle = createStyle(`$css
-  .${MK_CUSTOM_COMPONENT} {
+export const setupMKStyle = injectStyle(`$css
+  .${MK_BASE_CLASS} {
     box-sizing: border-box;
   }
 
-  p.${MK_CUSTOM_COMPONENT},
-  h1.${MK_CUSTOM_COMPONENT},
-  h2.${MK_CUSTOM_COMPONENT},
-  h3.${MK_CUSTOM_COMPONENT},
-  h4.${MK_CUSTOM_COMPONENT},
-  h5.${MK_CUSTOM_COMPONENT},
-  h6.${MK_CUSTOM_COMPONENT},
-  input.${MK_CUSTOM_COMPONENT},
-  select.${MK_CUSTOM_COMPONENT} {
+  p.${MK_BASE_CLASS},
+  h1.${MK_BASE_CLASS},
+  h2.${MK_BASE_CLASS},
+  h3.${MK_BASE_CLASS},
+  h4.${MK_BASE_CLASS},
+  h5.${MK_BASE_CLASS},
+  h6.${MK_BASE_CLASS},
+  input.${MK_BASE_CLASS},
+  select.${MK_BASE_CLASS} {
     margin: 0 !important;
     padding: 0 !important;
     color: inherit !important;
     font-family: inherit !important;
   }
 
-  h1.${MK_CUSTOM_COMPONENT} {
+  h1.${MK_BASE_CLASS} {
     font-size: 2em;
   }
 
-  h2.${MK_CUSTOM_COMPONENT} {
+  h2.${MK_BASE_CLASS} {
     font-size: 1.5em;
   }
 
-  h3.${MK_CUSTOM_COMPONENT} {
+  h3.${MK_BASE_CLASS} {
     font-size: 1.17em;
   }
 
-  h4.${MK_CUSTOM_COMPONENT} {
+  h4.${MK_BASE_CLASS} {
     font-size: 1em;
   }
 
-  h5.${MK_CUSTOM_COMPONENT} {
+  h5.${MK_BASE_CLASS} {
     font-size: 0.83em;
   }
 
-  h6.${MK_CUSTOM_COMPONENT} {
+  h6.${MK_BASE_CLASS} {
     font-size: 0.67em;
   }
 
-  h1.${MK_CUSTOM_COMPONENT},
-  h2.${MK_CUSTOM_COMPONENT},
-  h3.${MK_CUSTOM_COMPONENT},
-  h4.${MK_CUSTOM_COMPONENT},
-  h5.${MK_CUSTOM_COMPONENT},
-  h6.${MK_CUSTOM_COMPONENT} {
+  h1.${MK_BASE_CLASS},
+  h2.${MK_BASE_CLASS},
+  h3.${MK_BASE_CLASS},
+  h4.${MK_BASE_CLASS},
+  h5.${MK_BASE_CLASS},
+  h6.${MK_BASE_CLASS} {
     font-weight: bold;
+  }
+
+  .${MK_HIDDEN_CLASS} {
+    display: none !important;
   }
 
   .${MK_HIDDEN_SCROLL_CLASS},
@@ -59,9 +67,5 @@ export const defaultStyle = createStyle(`$css
     overflow: hidden;
     visibility: visible;
     padding-right: 14px;
-  }
-
-  .mk-hide {
-    display: none !important;
   }
 `);

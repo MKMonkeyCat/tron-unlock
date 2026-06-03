@@ -1,27 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "noEmit": true,
-    "skipLibCheck": true,
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "allowJs": true,
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "types": ["vitest/globals", "node"],
-    "paths": {
-      "@": ["src"],
-      "@/*": ["src/*"],
-      "#": ["src/utils"],
-      "#/*": ["src/utils/*"],
-      "~": ["src/store"],
-      "~/*": ["src/store/*"]
-    }
+    "types": ["vitest/globals", "node"]
   },
-  "include": ["./src/**/*", "./tests/**/*"],
-  "exclude": ["./node_modules", "./dist"]
+  "include": ["tests"]
 }

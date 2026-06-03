@@ -1,199 +1,183 @@
-import { MK_CUSTOM_COMPONENT } from '@/constants';
-import { skipHookFunc } from '@/utils';
-import { createStyle, waitForJQuery } from '@/utils/dom';
-import { disableDevToolDetector } from '@/utils/hook/dev-tool';
-import { createEventHookGroup } from '@/utils/hook/event-hooks';
-import { win } from '@/utils/hook/utils';
+import { MK_BASE_CLASS } from '@/constants';
+import type { HookController } from '@/hook';
+import {
+  createEventHookGroup,
+  createKeyboardShortcutHook,
+  mergeHookControllers,
+  setupDisableDevToolDetector,
+  skipHookFunc,
+} from '@/hook';
+import type { PluginGroupIDMap } from '@/plugin';
+import { definePlugin } from '@/plugin';
+import { doc, injectStyle, jQuery, win } from '@/utils';
 
-import type { GlobalFeatures } from '.';
+import { createHumanLikePointerBehavior } from './level-detector';
 
-export const registerEventHookFeature = (group: GlobalFeatures) => {
-  group.register(
-    'event-hook',
-    {
-      // 允許文字選取與複製
-      // 允許用戶選取和複製頁面上的文字
-      id: 'copy',
-      setup: ({ custom }, enabled) => {
-        const keyboard = createEventHookGroup(
-          ['keyup', 'keydown', 'keypress'],
-          enabled,
-          {
-            preCallCheck(e) {
-              if (!(e instanceof KeyboardEvent)) return false;
-              return (
-                (e.ctrlKey || e.metaKey) &&
-                ['c', 'v', 'x'].includes(e.key.toLowerCase())
-              );
-            },
-          }
-        );
+export const GlobalEventHookPluginId = {
+  BlurHook: 'blur-hook',
+  DevtoolHook: 'devtool-hook',
+  IdleCheckerHook: 'idle-checker-hook',
+  CopyPasteCutHook: 'copy-paste-cut-hook',
+  FullscreenHook: 'fullscreen-hook',
+} as const satisfies PluginGroupIDMap;
 
-        const misc = createEventHookGroup(
-          [
-            'contextmenu',
-            'copy',
-            'cut',
-            'paste',
-            'drag',
-            'dragstart',
-            'select',
-            'selectstart',
-          ],
-          enabled
-        );
-
-        custom.enable = () => {
-          keyboard.enable();
-          misc.enable();
-        };
-        custom.disable = () => {
-          keyboard.disable();
-          misc.disable();
-        };
-
-        return custom.disable as () => void;
-      },
-      enable: async ({ custom }) => {
-        const style = createStyle(`$css
-          *:not(.${MK_CUSTOM_COMPONENT}) {
-            user-select: text !important;
-          }
-        `);
-
-        (custom.enable as () => void)?.();
-        return () => {
-          (custom.disable as () => void)?.();
-          style.remove();
-        };
-      },
-    },
-    {
-      // 允許使用開發者工具
-      // 防止網站檢測並阻止開發者工具的使用
-      id: 'disable-devtool-detect',
-      liveReload: false,
-      experimental: true,
-      // TODO add clear config option
-      enable: () => disableDevToolDetector(),
-    },
-    {
-      // 抑制長時間不活動導致的彈出提示
-      // 防止因長時間不活動而彈出閒置警告提示
-      id: 'idle-check-disable',
-      enable: ({ custom }) => {
-        const style = createStyle(`$css
-          #idle-warning-popup {
-            display: none !important;
-          }
-        `);
-        const intervalID = setInterval(
-          () => document.dispatchEvent(new Event('mousemove')),
-          5e3
-        );
-
-        const load = skipHookFunc(() => {
-          waitForJQuery()
-            .then(($) => $('#idle-warning-popup').foundation('reveal', 'close'))
-            .catch(() => {});
-
-          custom.originalEnableIdleWarning ??=
-            win.statisticsSettings?.enableIdleWarning;
-          if (win.statisticsSettings) {
-            win.statisticsSettings.showIdleWarning = false;
-            win.statisticsSettings.enableIdleWarning = false;
-          }
-        });
-        load();
-        window.addEventListener('DOMContentLoaded', load);
-
-        return ({ custom }) => {
-          try {
-            if (custom.originalEnableIdleWarning !== null) {
-              if (win.statisticsSettings) {
-                // @ts-ignore
-                win.statisticsSettings.enableIdleWarning =
-                  custom.originalEnableIdleWarning;
-              }
-            }
-          } catch {}
-
-          style.remove();
-          window.removeEventListener('DOMContentLoaded', load);
-          clearInterval(intervalID);
-        };
-      },
-    },
-    {
-      id: 'fullscreen-change-block',
-      setup: ({ custom }, enabled) => {
-        const { enable, disable } = createEventHookGroup(
-          [
-            'fullscreenchange',
-            'mozfullscreenchange',
-            'webkitfullscreenchange',
-            'MSFullscreenChange',
-          ],
-          enabled
-        );
-
-        const keyboard = createEventHookGroup(
-          ['keyup', 'keydown', 'keypress'],
-          enabled,
-          {
-            preCallCheck(e) {
-              if (!(e instanceof KeyboardEvent)) return false;
-              const key = e.key.toLowerCase();
-              if (key === 'f11') return true;
-
-              return false;
-            },
-          }
-        );
-
-        custom.enable = () => {
-          enable();
-          keyboard.enable();
-        };
-        custom.disable = () => {
-          disable();
-          keyboard.disable();
-        };
-        return disable;
-      },
-      enable: ({ custom }) => {
-        (custom.enable as () => void)?.();
-        return () => (custom.disable as () => void)?.();
-      },
-    },
-    {
-      id: 'blur-change-block',
-      setup: ({ custom }, enabled) => {
-        // TODO inject document.visibilityState
-        const { enable, disable } = createEventHookGroup(
+export const createGlobalEventHookPlugins = () => [
+  definePlugin({
+    id: GlobalEventHookPluginId.BlurHook,
+    state: { reenable: null as (() => () => void) | null },
+    setup({ state }) {
+      const { disable, reenable } = mergeHookControllers(
+        createEventHookGroup(
           ['blur', 'focus', 'beforeunload', 'unload', 'pagehide', 'pageshow'],
-          enabled,
           {
-            preHookCheck() {
+            preCallCheck({ target }) {
               return (
-                this === undefined ||
-                this instanceof Window ||
-                this instanceof Document
+                target === undefined ||
+                target instanceof Window ||
+                target instanceof Document
               );
             },
-          }
-        );
+          },
+        ),
+      );
+      state.reenable = reenable;
+      return disable;
+    },
+    enable: ({ state }) => state.reenable?.(),
+  }),
+  definePlugin({
+    id: GlobalEventHookPluginId.DevtoolHook,
+    state: { controller: null as HookController | null },
+    setup({ state }, value) {
+      state.controller = setupDisableDevToolDetector();
+      if (value) state.controller.enable();
+      else state.controller.disable();
+    },
+    async toggle({ state }, value) {
+      const controller = state.controller;
+      if (!controller) return;
 
-        custom.enable = enable;
-        custom.disable = disable;
-        return disable;
-      },
-      enable: ({ custom }) => {
-        (custom.enable as () => void)?.();
-        return () => {
-          (custom.disable as () => void)?.();
-        };
-      },
-    }
-  );
-};
+      if (value) controller.enable();
+      else controller.disable();
+    },
+  }),
+  definePlugin({
+    id: GlobalEventHookPluginId.IdleCheckerHook,
+    state: {
+      showIdleWarning: undefined as boolean | undefined,
+      enableIdleWarning: undefined as boolean | undefined,
+    },
+    enable({ state }) {
+      let isActive = true;
+
+      const cleanupPointer = createHumanLikePointerBehavior(doc, win);
+      const style = injectStyle(`$css
+        #idle-warning-popup {
+          display: none !important;
+        }
+      `);
+
+      const statisticsSettings = win.statisticsSettings;
+      if (statisticsSettings) {
+        if (state.showIdleWarning === undefined) {
+          state.showIdleWarning = statisticsSettings.showIdleWarning;
+        }
+        if (state.enableIdleWarning === undefined) {
+          state.enableIdleWarning = statisticsSettings.enableIdleWarning;
+        }
+
+        statisticsSettings.showIdleWarning = false;
+        statisticsSettings.enableIdleWarning = true;
+      }
+
+      const load = skipHookFunc(async () => {
+        if (!isActive) return;
+
+        try {
+          const $ = await jQuery;
+          if (!isActive) return;
+
+          $('#idle-warning-popup').foundation?.('reveal', 'close');
+        } catch {}
+      });
+
+      if (doc.readyState === 'loading') {
+        win.addEventListener('DOMContentLoaded', load);
+      } else load();
+
+      return () => {
+        isActive = false;
+
+        cleanupPointer();
+        style.remove();
+        win.removeEventListener('DOMContentLoaded', load);
+
+        const statisticsSettings = win.statisticsSettings;
+        if (statisticsSettings) {
+          if (state.showIdleWarning !== undefined) {
+            statisticsSettings.showIdleWarning = state.showIdleWarning;
+          }
+          if (state.enableIdleWarning !== undefined) {
+            statisticsSettings.enableIdleWarning = state.enableIdleWarning;
+          }
+        }
+
+        state.showIdleWarning = undefined;
+        state.enableIdleWarning = undefined;
+      };
+    },
+  }),
+  definePlugin({
+    id: GlobalEventHookPluginId.CopyPasteCutHook,
+    state: { reenable: null as (() => () => void) | null },
+    setup({ state }) {
+      const { disable, reenable } = mergeHookControllers(
+        createEventHookGroup([
+          'copy',
+          'selectstart',
+          'cut',
+          'paste',
+          'contextmenu',
+        ]),
+        createKeyboardShortcutHook((_, meta) => {
+          // ctrl/cmd + c/v/x
+          return meta.isMod && 'cvx'.includes(meta.key);
+        }),
+      );
+      state.reenable = reenable;
+      return disable;
+    },
+    enable: ({ state }) => {
+      const style = injectStyle(`$css
+        *:not(.${MK_BASE_CLASS}) {
+          user-select: text !important;
+        }
+      `);
+
+      const cleanup = state.reenable?.();
+      return () => {
+        style.remove();
+        cleanup?.();
+      };
+    },
+  }),
+  definePlugin({
+    id: GlobalEventHookPluginId.FullscreenHook,
+    state: { reenable: null as (() => () => void) | null },
+    setup({ state }) {
+      const { disable, reenable } = mergeHookControllers(
+        createEventHookGroup([
+          'fullscreenchange',
+          'MSFullscreenChange',
+          'mozfullscreenchange',
+          'webkitfullscreenchange',
+        ]),
+        createKeyboardShortcutHook((_, meta) => meta.key === 'f11'),
+      );
+
+      state.reenable = reenable;
+      return disable;
+    },
+    enable: ({ state }) => state.reenable?.(),
+  }),
+];

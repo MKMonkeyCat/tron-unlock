@@ -23,8 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 
-tmp/
+release
 
 .env
 .env.*
 !.env.example
+
+tmp_data/
