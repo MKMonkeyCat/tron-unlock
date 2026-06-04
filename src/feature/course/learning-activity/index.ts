@@ -1,11 +1,11 @@
 import { httpRequestHookManager } from '@/hook/request/http-shared';
 import type { PluginGroupIDMap } from '@/plugin';
-import { definePlugin } from '@/plugin';
+import { definePlugin, definePluginWithConfig } from '@/plugin';
 
 export const CourseLearningActivityPluginId = {
   ForceAllowDownload: 'force-allow-download',
   ForceAllowForwardSeeking: 'force-allow-forward-seeking',
-  AutoPlayNextVideo: 'auto-play-next-video',
+  AutoViewActivity: 'auto-view-activity',
 } as const satisfies PluginGroupIDMap;
 
 const hookActivityApi = (key: 'allow_download' | 'allow_forward_seeking') =>
@@ -41,9 +41,16 @@ export const createCourseLearningActivityPlugins = () => [
       hookActivityApi('allow_forward_seeking');
     },
   }),
-  definePlugin({
-    id: CourseLearningActivityPluginId.AutoPlayNextVideo,
-    // TODO implement auto play next video
-    enable: () => {},
-  }),
+  ...definePluginWithConfig(
+    definePlugin({ id: CourseLearningActivityPluginId.AutoViewActivity }),
+    [
+      ...definePluginWithConfig(
+        definePlugin({ id: 'auto-video', type: 'feature' }),
+        [definePlugin({ id: 'play-rate' })],
+      ),
+      definePlugin({ id: 'auto-document' }),
+      definePlugin({ id: 'auto-ppt' }),
+      definePlugin({ id: 'auto-other' }),
+    ],
+  ),
 ];

@@ -1,7 +1,6 @@
-import { detectEnvironment, Environment } from './base';
-import type { MaybePromise } from './type';
-
-import { isFunction } from '.';
+import { detectEnvironment, Environment } from '@/utils/base';
+import type { MaybePromise } from '@/utils/type';
+import { isFunction } from '@/utils/type';
 
 const ADAPTER_MEMORY = 'memory' as const;
 const ADAPTER_LOCAL_STORAGE = 'localStorage' as const;

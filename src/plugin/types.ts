@@ -31,26 +31,63 @@ export interface FeatureContext<T extends BaseStateType> {
   api: PluginApi;
 }
 
-export interface PluginDefinitionMetadata {
-  hidden?: boolean; // eq ui: { hidden: true }
-  ui?: {
-    hidden?: boolean;
-    control?: 'toggle' | 'select' | 'input'; // default to 'toggle'
-  };
+interface ActionLifeCycles<T extends BaseStateType> {
+  enable?: (ctx: FeatureContext<T>) => MaybePromise<CleanupFn<T> | void>;
+  disable?: (ctx: FeatureContext<T>) => MaybePromise<void>;
+  toggle?: (ctx: FeatureContext<T>, value: boolean) => MaybePromise<void>;
 }
 
-export interface PluginDefinition<
+type PluginType = 'tab' | 'group' | 'feature';
+
+export type UiControl =
+  | SelectControl
+  | RangeControl
+  | CheckboxControl
+  | TextControl;
+
+export interface SelectControl {
+  type: 'select';
+  options: { label: string; value: string | number | boolean }[];
+  multiple?: boolean;
+}
+
+export interface RangeControl {
+  type: 'range';
+  min: number;
+  max: number;
+  step?: number;
+}
+
+export interface CheckboxControl {
+  type: 'checkbox';
+}
+
+export interface TextControl {
+  type: 'text';
+  placeholder?: string;
+}
+
+export type PluginDefinition<
   T extends BaseStateType = BaseStateType,
   I18N extends Translations = Translations,
-> {
+  Type extends PluginType = PluginType,
+> = {
   id: PluginID;
-  type?: 'tab' | 'group' | 'feature'; // default to 'feature'
+  type?: Type; // default to 'feature'
   enabled?: boolean; // default to true
   state?: T;
   parentId?: PluginID;
-  children?: PluginDefinition<T, I18N>[];
-
+  children?: PluginDefinition<T, I18N, Type>[];
   dependencies?: PluginID[];
+
+  ui?: {
+    hidden?: boolean;
+    description?: string;
+    icon?: string;
+    control?: UiControl;
+  };
+  // metadata?: {};
+
   test?:
     | ((ctx: FeatureContext<T>, route: RouteSnapshot) => MaybePromise<boolean>)
     | RegExp;
@@ -58,12 +95,15 @@ export interface PluginDefinition<
     ctx: FeatureContext<T>,
     value: boolean,
   ) => MaybePromise<CleanupFn<T> | void>;
-  enable?: (ctx: FeatureContext<T>) => MaybePromise<CleanupFn<T> | void>;
-  disable?: (ctx: FeatureContext<T>) => MaybePromise<void>;
-  toggle?: (ctx: FeatureContext<T>, value: boolean) => MaybePromise<void>;
-  metadata?: PluginDefinitionMetadata;
 
   order?: number;
+} & (Type extends 'feature' ? ActionLifeCycles<T> : {});
+
+export interface SubPluginDefinition<
+  T extends BaseStateType = BaseStateType,
+  I18N extends Translations = Translations,
+> extends Omit<PluginDefinition<T, I18N>, 'id' | 'parentId'> {
+  id?: `.${string}` | (string & {});
 }
 
 export interface PluginNode<T extends BaseStateType> extends Omit<
@@ -78,6 +118,24 @@ export interface PluginNode<T extends BaseStateType> extends Omit<
 export const definePlugin = <T extends BaseStateType>(
   plugin: PluginDefinition<T>,
 ): PluginDefinition<T> => plugin;
+
+export const definePluginWithConfig = <
+  T extends BaseStateType,
+  I18N extends Translations,
+>(
+  basePlugin: PluginDefinition<T, I18N>,
+  configPlugins: SubPluginDefinition<T, I18N>[],
+): PluginDefinition<T, I18N>[] => [
+  { type: 'group', ...basePlugin },
+  ...configPlugins.map((cfg, index) => {
+    let id = cfg.id;
+    if (!id) id = `${basePlugin.id}.config.${index}`;
+    else if (id.startsWith('.')) id = `${basePlugin.id}${id}`;
+    else id = `${basePlugin.id}.${id}`;
+
+    return { ...cfg, id, parentId: basePlugin.id };
+  }),
+];
 
 export interface FeatureControlModule {
   id: PluginID;

@@ -120,11 +120,11 @@ export class LifecycleManager<T extends BaseStateType = BaseStateType> {
         if (isFunction(cleanupFn)) this.#cleanups.set(node.id, cleanupFn);
       }
 
-      if (node.enable && !node.setup) {
-        const cleanupFn = await node.enable(ctx);
+      // if (node.enable && !node.setup) {
+      //   const cleanupFn = await node.enable(ctx);
 
-        if (isFunction(cleanupFn)) this.#cleanups.set(node.id, cleanupFn);
-      }
+      //   if (isFunction(cleanupFn)) this.#cleanups.set(node.id, cleanupFn);
+      // }
 
       this.#activeStatuses.set(node.id, PluginStatus.Running);
 
@@ -144,7 +144,7 @@ export class LifecycleManager<T extends BaseStateType = BaseStateType> {
       this.#cleanups.delete(node.id);
     }
 
-    if (node.disable) await node.disable(this.#createContext(node));
+    // if (node.disable) await node.disable(this.#createContext(node));
     this.#activeStatuses.set(node.id, PluginStatus.Disabled);
   }
 
