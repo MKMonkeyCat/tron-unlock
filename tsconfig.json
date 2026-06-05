@@ -5,12 +5,20 @@
     "lib": ["ES2023", "DOM"],
     "moduleResolution": "bundler",
     "noEmit": true,
-    "skipLibCheck": true,
     "types": ["vite/client"],
     "paths": {
       "@": ["./src"],
-      "@/*": ["./src/*"]
-    }
+      "@/*": ["./src/*"],
+
+      /* Preact Config */
+      "react": ["./node_modules/preact/compat/"],
+      "react-dom": ["./node_modules/preact/compat/"]
+    },
+
+    /* Preact Config */
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "skipLibCheck": true
   },
   "include": ["src", "plugin", "vite.config.ts", "const.ts"],
   "exclude": ["./node_modules", "./dist"]

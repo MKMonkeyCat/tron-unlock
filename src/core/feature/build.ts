@@ -9,7 +9,7 @@ import type {
   FeatureWithoutCategory,
 } from './types';
 
-class FeatureRegistry {
+export class FeatureRegistry {
   #map = new Map<string, AnyFeature>();
 
   register(feature: AnyFeature) {
@@ -21,10 +21,11 @@ class FeatureRegistry {
   }
 }
 
-const registry = new FeatureRegistry();
+// export const registry = new FeatureRegistry();
 
 export class GroupBuilder {
   constructor(
+    private registry: FeatureRegistry,
     private tab: string,
     private group: string,
   ) {}
@@ -35,7 +36,7 @@ export class GroupBuilder {
     TConfig extends ConfigData = ConfigData,
     TI18n extends Translations = Translations,
   >(feature: FeatureWithoutCategory<TId, TState, TConfig, TI18n>): this {
-    registry.register({
+    this.registry.register({
       ...feature,
       category: this.tab,
       group: this.group,
@@ -45,10 +46,13 @@ export class GroupBuilder {
 }
 
 export class TabBuilder implements TabBuilder {
-  constructor(private tab: string) {}
+  constructor(
+    private registry: FeatureRegistry,
+    private tab: string,
+  ) {}
 
   group(group: string, callback?: (builder: GroupBuilder) => void) {
-    const groupBuilder = new GroupBuilder(this.tab, group);
+    const groupBuilder = new GroupBuilder(this.registry, this.tab, group);
     if (!callback) return groupBuilder;
 
     callback?.(groupBuilder);
@@ -61,7 +65,7 @@ export class TabBuilder implements TabBuilder {
     TConfig extends ConfigData = ConfigData,
     TI18n extends Translations = Translations,
   >(feature: FeatureWithoutCategory<TId, TState, TConfig, TI18n>): this {
-    registry.register({ ...feature, category: this.tab } as AnyFeature);
+    this.registry.register({ ...feature, category: this.tab } as AnyFeature);
     return this;
   }
 }
@@ -71,9 +75,11 @@ export interface TabBuilder {
   group(group: string, callback: (builder: GroupBuilder) => void): this;
 }
 
-class Builder {
+export class Builder {
+  constructor(private registry: FeatureRegistry) {}
+
   tab(tab: string, callback?: (builder: TabBuilder) => void) {
-    const tabBuilder = new TabBuilder(tab);
+    const tabBuilder = new TabBuilder(this.registry, tab);
     if (callback) {
       callback(tabBuilder);
     }
@@ -88,5 +94,3 @@ export const defineFeature = <
 >(
   feature: Feature<TId, TState, TConfig>,
 ): Feature<TId, TState, TConfig> => feature;
-
-export const builder = new Builder();

@@ -1,5 +1,3 @@
-import { MK_BASE_CLASS } from '@/constants';
-
 const globalScope = globalThis as typeof globalThis & {
   unsafeWindow?: typeof globalThis;
   window?: typeof globalThis;
@@ -112,35 +110,6 @@ export class DOMList<T extends Element = Element> {
     if (v === undefined) return this.els[0]?.textContent ?? '';
     return this.each((el) => (el.textContent = v));
   }
-}
-
-export function $e<K extends keyof HTMLElementTagNameMap>(
-  tag: K,
-  options?: {
-    class?: string[];
-    attrs?: Record<string, string>;
-    style?: Partial<CSSStyleDeclaration>;
-    children?: Child[];
-    isMk?: boolean;
-  },
-) {
-  const el = document.createElement(tag);
-  const kit = new DOMKit(el);
-
-  if (options?.isMk ?? true) kit.class(MK_BASE_CLASS);
-  if (options?.class) kit.class(...options.class);
-
-  if (options?.attrs) {
-    for (const [k, v] of Object.entries(options.attrs)) {
-      el.setAttribute(k, v);
-    }
-  }
-
-  if (options?.style) kit.style(options.style);
-
-  if (options?.children) kit.append(...options.children);
-
-  return kit;
 }
 
 // type Listener = () => void;

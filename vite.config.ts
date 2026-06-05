@@ -11,8 +11,6 @@ import path from 'path';
 import { defineConfig } from 'vite';
 import zip from 'vite-plugin-zip-pack';
 
-const MINIFY = process.env.MINIFY === 'true';
-
 export default defineConfig({
   plugins: [
     minifyCssHtmlPlugin(),
@@ -30,27 +28,11 @@ export default defineConfig({
     },
   },
   build: {
-    ...(MINIFY
-      ? {
-          minify: 'terser',
-          terserOptions: {
-            mangle: true,
-            compress: {
-              drop_console: false,
-              dead_code: false,
-              keep_fnames: false,
-              keep_classnames: false,
-            },
-            format: { comments: false },
-          },
-        }
-      : { minify: false }),
-    // lib: {
-    //   entry: 'src/main.ts',
-    //   name: 'ULearn',
-    //   fileName: 'ULearn',
-    //   formats: ['iife'],
-    // },
-    // outDir: path.resolve(__dirname, 'dist/browser'),
+    minify: false,
+  },
+  oxc: {
+    jsx: {
+      importSource: 'preact',
+    },
   },
 });
