@@ -1,8 +1,7 @@
-import type { FeatureControlModule, PluginGroupIDMap } from '@/plugin';
+import type { TabBuilder } from '@/core';
 
-export const CourseFeaturePluginId = {} as const satisfies PluginGroupIDMap;
+import { createCourseLearningActivityPlugins } from './learning-activity';
 
-export const createCourseFeatureModule = (): FeatureControlModule => ({
-  id: 'course',
-  plugins: [],
-});
+export const createCourseFeatureModule = (tab: TabBuilder) => {
+  createCourseLearningActivityPlugins(tab.group('learning-activity'));
+};

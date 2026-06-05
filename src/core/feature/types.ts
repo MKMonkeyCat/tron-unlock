@@ -38,10 +38,12 @@ export type FeatureSchemaField<
   K extends string = string,
   V extends ConfigValue = ConfigValue,
 > = (
-  | (V extends boolean ? { type: 'toggle' } : never)
-  | (V extends boolean | string | number ? { type: 'input' } : never)
-  | (V extends number ? { type: 'number'; min?: number; max?: number } : never)
-  | (V extends string | boolean | number
+  | ([V] extends [boolean] ? { type: 'toggle' } : never)
+  | ([V] extends [boolean | string | number] ? { type: 'input' } : never)
+  | ([V] extends [number]
+      ? { type: 'number'; step?: number; min?: number; max?: number }
+      : never)
+  | ([V] extends [string | boolean | number]
       ? { type: 'select'; options: V[] }
       : never)
 ) & { key: K };
@@ -53,7 +55,15 @@ export type FieldForConfig<TConfig extends ConfigData> = {
   >;
 }[keyof TConfig & string];
 
-export type AnyFeature = Feature<string, any, any>;
+export type AnyFeature = Feature<FeatureId, any, any>;
+
+export type FeatureWithoutCategory<
+  TId extends FeatureId = FeatureId,
+  TState extends BaseStateType = BaseStateType,
+  TConfig extends ConfigData = ConfigData,
+  TI18n extends Translations = Translations,
+> = Omit<Feature<TId, TState, TConfig, TI18n>, 'category'>;
+
 export type Feature<
   TId extends FeatureId = FeatureId,
   TState extends BaseStateType = BaseStateType,
@@ -64,6 +74,8 @@ export type Feature<
 
   category: FeatureCategoryId;
   group?: FeatureGroupId;
+
+  state?: TState;
 
   defaultConfig?: TConfig;
 

@@ -1,12 +1,13 @@
+import type { GroupBuilder } from '@/core';
 import { httpRequestHookManager } from '@/hook/request/http-shared';
-import type { PluginGroupIDMap } from '@/plugin';
-import { definePlugin, definePluginWithConfig } from '@/plugin';
 
 export const CourseLearningActivityPluginId = {
   ForceAllowDownload: 'force-allow-download',
   ForceAllowForwardSeeking: 'force-allow-forward-seeking',
-  AutoViewActivity: 'auto-view-activity',
-} as const satisfies PluginGroupIDMap;
+  AutoViewVideoActivity: 'auto-view-video-activity',
+} as const;
+
+type AutoVideoMode = 'auto' | 'custom';
 
 const hookActivityApi = (key: 'allow_download' | 'allow_forward_seeking') =>
   httpRequestHookManager.register({
@@ -28,29 +29,31 @@ const hookActivityApi = (key: 'allow_download' | 'allow_forward_seeking') =>
     },
   });
 
-export const createCourseLearningActivityPlugins = () => [
-  definePlugin({
+export const createCourseLearningActivityPlugins = (group: GroupBuilder) => {
+  group.append({
     id: CourseLearningActivityPluginId.ForceAllowDownload,
-    setup() {
-      hookActivityApi('allow_download');
-    },
-  }),
-  definePlugin({
+    onEnable: () => hookActivityApi('allow_download'),
+  });
+  group.append({
     id: CourseLearningActivityPluginId.ForceAllowForwardSeeking,
-    setup() {
-      hookActivityApi('allow_forward_seeking');
+    onEnable: () => hookActivityApi('allow_forward_seeking'),
+  });
+  group.append({
+    id: CourseLearningActivityPluginId.AutoViewVideoActivity,
+    defaultConfig: {
+      playRate: 1.75,
+      autoStart: true,
+      playThresholdMode: 'custom' as AutoVideoMode,
+      playThreshold: 1,
+      // TODO add random config
+      playThresholdRandom: true,
     },
-  }),
-  ...definePluginWithConfig(
-    definePlugin({ id: CourseLearningActivityPluginId.AutoViewActivity }),
-    [
-      ...definePluginWithConfig(
-        definePlugin({ id: 'auto-video', type: 'feature' }),
-        [definePlugin({ id: 'play-rate' })],
-      ),
-      definePlugin({ id: 'auto-document' }),
-      definePlugin({ id: 'auto-ppt' }),
-      definePlugin({ id: 'auto-other' }),
+    fields: [
+      { key: 'autoStart', type: 'toggle' },
+      { key: 'playRate', type: 'number', min: 0.1, step: 0.1, max: 16 },
+      { key: 'playThreshold', type: 'number', min: 0, step: 0.05, max: 1 },
+      { key: 'playThresholdMode', type: 'select', options: ['auto', 'custom'] },
+      { key: 'playThresholdRandom', type: 'toggle' },
     ],
-  ),
-];
+  });
+};

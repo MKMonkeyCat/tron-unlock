@@ -1,40 +1,35 @@
 import { MK_HIDDEN_SCROLL_CLASS } from '@/constants';
+import type { GroupBuilder } from '@/core';
 import { skipHookFunc } from '@/hook';
-import type { PluginGroupIDMap } from '@/plugin';
-import { definePlugin } from '@/plugin';
 import { doc, injectStyle, win } from '@/utils';
 
-export const GlobalMiscPluginId = {
+const GlobalMiscPluginId = {
   HiddenFooter: 'hidden-footer',
   InitHideScrollbar: 'init-hide-scrollbar',
-} as const satisfies PluginGroupIDMap;
+} as const;
 
-export const createGlobalMiscPlugins = () => [
-  definePlugin({
+export const createGlobalMiscPlugins = (tab: GroupBuilder) => {
+  tab.append({
     id: GlobalMiscPluginId.HiddenFooter,
-    enable() {
+    onEnable() {
       const style = injectStyle(`$css
         .main-content {
           padding-bottom: 0 !important;
         }
-
         [data-category=tronclass-footer] {
           display: none !important;
         }
       `);
-
       return () => style.remove();
     },
-  }),
-  definePlugin({
+  });
+  tab.append({
     id: GlobalMiscPluginId.InitHideScrollbar,
-    enable() {
+    onEnable() {
       const INIT_HIDE_SCROLL_CLASSNAME = `${MK_HIDDEN_SCROLL_CLASS}-init`;
-
       const toggleHideScroll = (hide: boolean) => {
         doc.body?.classList.toggle(INIT_HIDE_SCROLL_CLASSNAME, hide);
       };
-
       const fixScrollStyleHandle = skipHookFunc(() => {
         if (doc.readyState !== 'complete') {
           toggleHideScroll(true);
@@ -45,7 +40,6 @@ export const createGlobalMiscPlugins = () => [
           );
         }
       });
-
       fixScrollStyleHandle();
       doc.addEventListener('DOMContentLoaded', fixScrollStyleHandle);
       return () => {
@@ -53,5 +47,5 @@ export const createGlobalMiscPlugins = () => [
         doc.removeEventListener('DOMContentLoaded', fixScrollStyleHandle);
       };
     },
-  }),
-];
+  });
+};

@@ -1,12 +1,7 @@
-import type { FeatureControlModule, PluginGroupIDMap } from '@/plugin';
+import type { TabBuilder } from '@/core';
 
-import { createExamMiscPlugins, ExamMiscPluginId } from './misc';
+import { createExamMiscPlugins } from './misc';
 
-export const ExamFeaturePluginId = {
-  ...ExamMiscPluginId,
-} as const satisfies PluginGroupIDMap;
-
-export const createExamFeatureModule = (): FeatureControlModule => ({
-  id: 'exam',
-  plugins: [...createExamMiscPlugins()],
-});
+export const createExamFeatureModule = (tab: TabBuilder) => {
+  createExamMiscPlugins(tab.group('misc'));
+};

@@ -1,17 +1,9 @@
-import type { FeatureControlModule, PluginGroupIDMap } from '@/plugin';
+import type { TabBuilder } from '@/core';
 
-import {
-  createGlobalEventHookPlugins,
-  GlobalEventHookPluginId,
-} from './event-hook';
-import { createGlobalMiscPlugins, GlobalMiscPluginId } from './misc';
+import { createGlobalEventHookPlugins } from './event-hook';
+import { createGlobalMiscPlugins } from './misc';
 
-export const GlobalFeaturePluginId = {
-  ...GlobalEventHookPluginId,
-  ...GlobalMiscPluginId,
-} as const satisfies PluginGroupIDMap;
-
-export const createGlobalFeatureModule = (): FeatureControlModule => ({
-  id: 'global',
-  plugins: [...createGlobalEventHookPlugins(), ...createGlobalMiscPlugins()],
-});
+export const createGlobalFeatureModule = (tab: TabBuilder) => {
+  createGlobalEventHookPlugins(tab.group('event-hook'));
+  createGlobalMiscPlugins(tab.group('misc'));
+};

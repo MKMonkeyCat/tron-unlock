@@ -1,6 +1,4 @@
-// import { initializeEventHooks } from './event-hook';
 import type { HookController } from './function-hook';
-// import { initializeXHRHook } from './request';
 
 export interface MergedHookController extends HookController {
   reenable(): () => void;
@@ -24,8 +22,3 @@ export const mergeHookControllers = <T extends HookController[]>(
     },
   };
 };
-
-// export const setupAllBaseHooks = () => {
-//   initializeEventHooks();
-//   initializeXHRHook();
-// };

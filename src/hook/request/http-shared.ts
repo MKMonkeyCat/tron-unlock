@@ -7,6 +7,8 @@ export class HTTPRequestHookManager {
 
   register(hook: HTTPRequestHook) {
     this.#hooks.add(hook);
+
+    return () => this.#hooks.delete(hook);
   }
 
   async #shouldTrigger(

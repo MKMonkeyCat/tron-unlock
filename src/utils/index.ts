@@ -1,7 +1,6 @@
 export * from './base';
 export * from './dom';
 export * from './format';
-export * from './i18n';
 export * from './lib';
 export * from './type';
 

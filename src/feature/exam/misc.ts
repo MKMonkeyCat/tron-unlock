@@ -1,15 +1,14 @@
-import type { PluginGroupIDMap } from '@/plugin';
-import { definePlugin } from '@/plugin';
+import type { GroupBuilder } from '@/core';
 import { injectStyle } from '@/utils';
 
 export const ExamMiscPluginId = {
   HiddenMark: 'hidden-mark',
-} as const satisfies PluginGroupIDMap;
+} as const;
 
-export const createExamMiscPlugins = () => [
-  definePlugin({
+export const createExamMiscPlugins = (group: GroupBuilder) => {
+  group.append({
     id: ExamMiscPluginId.HiddenMark,
-    enable() {
+    onEnable() {
       // 實際不須使用 ::before 或 ::after
       const style = injectStyle(`$css
         [id="Symbol(water-mark)"],
@@ -25,5 +24,5 @@ export const createExamMiscPlugins = () => [
       `);
       return () => style.remove();
     },
-  }),
-];
+  });
+};

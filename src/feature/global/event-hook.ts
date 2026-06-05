@@ -1,4 +1,5 @@
 import { MK_BASE_CLASS } from '@/constants';
+import type { GroupBuilder } from '@/core';
 import type { HookController } from '@/hook';
 import {
   createEventHookGroup,
@@ -7,22 +8,20 @@ import {
   setupDisableDevToolDetector,
   skipHookFunc,
 } from '@/hook';
-import type { PluginGroupIDMap } from '@/plugin';
-import { definePlugin } from '@/plugin';
 import { doc, injectStyle, jQuery, win } from '@/utils';
 
 import { createHumanLikePointerBehavior } from './level-detector';
 
-export const GlobalEventHookPluginId = {
+const GlobalEventHookPluginId = {
   BlurHook: 'blur-hook',
   DevtoolHook: 'devtool-hook',
   IdleCheckerHook: 'idle-checker-hook',
   CopyPasteCutHook: 'copy-paste-cut-hook',
   FullscreenHook: 'fullscreen-hook',
-} as const satisfies PluginGroupIDMap;
+} as const;
 
-export const createGlobalEventHookPlugins = () => [
-  definePlugin({
+export const createGlobalEventHookPlugins = (tab: GroupBuilder) => {
+  tab.append({
     id: GlobalEventHookPluginId.BlurHook,
     state: { reenable: null as (() => () => void) | null },
     setup({ state }) {
@@ -43,31 +42,34 @@ export const createGlobalEventHookPlugins = () => [
       state.reenable = reenable;
       return disable;
     },
-    enable: ({ state }) => state.reenable?.(),
-  }),
-  definePlugin({
+    onEnable: ({ state }) => state.reenable?.(),
+  });
+
+  tab.append({
     id: GlobalEventHookPluginId.DevtoolHook,
     state: { controller: null as HookController | null },
     setup({ state }, value) {
       state.controller = setupDisableDevToolDetector();
+
       if (value) state.controller.enable();
       else state.controller.disable();
     },
-    async toggle({ state }, value) {
+    async onToggle({ state }, value) {
       const controller = state.controller;
       if (!controller) return;
 
       if (value) controller.enable();
       else controller.disable();
     },
-  }),
-  definePlugin({
+  });
+
+  tab.append({
     id: GlobalEventHookPluginId.IdleCheckerHook,
     state: {
       showIdleWarning: undefined as boolean | undefined,
       enableIdleWarning: undefined as boolean | undefined,
     },
-    enable({ state }) {
+    onEnable({ state }) {
       let isActive = true;
 
       const cleanupPointer = createHumanLikePointerBehavior(doc, win);
@@ -126,8 +128,9 @@ export const createGlobalEventHookPlugins = () => [
         state.enableIdleWarning = undefined;
       };
     },
-  }),
-  definePlugin({
+  });
+
+  tab.append({
     id: GlobalEventHookPluginId.CopyPasteCutHook,
     state: { reenable: null as (() => () => void) | null },
     setup({ state }) {
@@ -147,7 +150,7 @@ export const createGlobalEventHookPlugins = () => [
       state.reenable = reenable;
       return disable;
     },
-    enable: ({ state }) => {
+    onEnable: ({ state }) => {
       const style = injectStyle(`$css
         *:not(.${MK_BASE_CLASS}) {
           user-select: text !important;
@@ -160,8 +163,9 @@ export const createGlobalEventHookPlugins = () => [
         cleanup?.();
       };
     },
-  }),
-  definePlugin({
+  });
+
+  tab.append({
     id: GlobalEventHookPluginId.FullscreenHook,
     state: { reenable: null as (() => () => void) | null },
     setup({ state }) {
@@ -178,6 +182,6 @@ export const createGlobalEventHookPlugins = () => [
       state.reenable = reenable;
       return disable;
     },
-    enable: ({ state }) => state.reenable?.(),
-  }),
-];
+    onEnable: ({ state }) => state.reenable?.(),
+  });
+};
