@@ -14,6 +14,7 @@ ${LEARNING_PLATFORM_DOMAINS.map((url) => `// @match        https://${url}/*`).jo
 // @match        https://coreyadam8.github.io/copyguard/
 // @match        https://theajack.github.io/disable-devtool/
 // @match        https://blog.aepkill.com/demos/devtools-detector/
+// @grant        GM_addStyle
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_listValues

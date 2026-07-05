@@ -14,8 +14,17 @@ export type RouteSnapshot = Pick<
   'href' | 'pathname' | 'search' | 'hash'
 >;
 
-export type ConfigValue = string | boolean | number;
-export type ConfigData = Record<string, ConfigValue>;
+export type ConfigValue =
+  | string
+  | number
+  | boolean
+  | null
+  | ConfigData
+  | ConfigValue[];
+
+export interface ConfigData {
+  [key: string]: ConfigValue;
+}
 
 export type CleanupFn<
   TStatus extends BaseStateType = BaseStateType,
@@ -84,7 +93,8 @@ export type Feature<
         ctx: FeatureContext<TState, TConfig, TI18n>,
         route: RouteSnapshot,
       ) => MaybePromise<boolean>)
-    | RegExp;
+    | RegExp
+    | boolean;
   setup?: (
     ctx: FeatureContext<TState, TConfig, TI18n>,
     value: boolean,

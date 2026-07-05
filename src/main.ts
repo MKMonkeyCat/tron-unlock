@@ -1,6 +1,5 @@
 import { GITHUB_REPO_URL, VERSION } from './constants';
-import { injectUI } from './core/ui';
-import { initializeFeatures, registry } from './feature';
+import { initializeFeatures } from './feature';
 
 const printArtLog = () => {
   const art = `%c
@@ -28,7 +27,7 @@ printArtLog();
 (async () => {
   await initializeFeatures();
 
-  injectUI(registry);
+  // initialize ui(setting)
 })();
 
 if (import.meta.env.DEV) {

@@ -26,9 +26,8 @@ export const createGlobalMiscPlugins = (tab: GroupBuilder) => {
   tab.append({
     id: GlobalMiscPluginId.InitHideScrollbar,
     onEnable() {
-      const INIT_HIDE_SCROLL_CLASSNAME = `${MK_HIDDEN_SCROLL_CLASS}-init`;
       const toggleHideScroll = (hide: boolean) => {
-        doc.body?.classList.toggle(INIT_HIDE_SCROLL_CLASSNAME, hide);
+        doc.body?.classList.toggle(`${MK_HIDDEN_SCROLL_CLASS}-init`, hide);
       };
       const fixScrollStyleHandle = skipHookFunc(() => {
         if (doc.readyState !== 'complete') {
@@ -40,6 +39,7 @@ export const createGlobalMiscPlugins = (tab: GroupBuilder) => {
           );
         }
       });
+
       fixScrollStyleHandle();
       doc.addEventListener('DOMContentLoaded', fixScrollStyleHandle);
       return () => {

@@ -14,7 +14,7 @@ export const Environment = {
 } as const;
 export type Environment = (typeof Environment)[keyof typeof Environment];
 
-export const detectEnvironment = (): Environment => {
+const detectEnvironment = (): Environment => {
   const global = globalThis as typeof globalThis & {
     unsafeWindow?: typeof globalThis;
     GM_info?: { scriptHandler: string };
@@ -43,6 +43,18 @@ export const detectEnvironment = (): Environment => {
   }
 
   return Environment.Web;
+};
+
+export const ENV = detectEnvironment();
+
+export const isScriptManager = (): boolean => {
+  return (
+    [
+      Environment.Greasemonkey,
+      Environment.Tampermonkey,
+      Environment.Violentmonkey,
+    ] as Environment[]
+  ).includes(ENV);
 };
 
 //#region Hidden Property Utility

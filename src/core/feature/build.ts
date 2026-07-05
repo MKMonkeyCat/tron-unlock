@@ -4,7 +4,6 @@ import type {
   AnyFeature,
   BaseStateType,
   ConfigData,
-  Feature,
   FeatureId,
   FeatureWithoutCategory,
 } from './types';
@@ -20,8 +19,6 @@ export class FeatureRegistry {
     return [...this.#map.values()];
   }
 }
-
-// export const registry = new FeatureRegistry();
 
 export class GroupBuilder {
   constructor(
@@ -86,11 +83,3 @@ export class Builder {
     return this;
   }
 }
-
-export const defineFeature = <
-  TId extends FeatureId = FeatureId,
-  TState extends BaseStateType = BaseStateType,
-  TConfig extends ConfigData = ConfigData,
->(
-  feature: Feature<TId, TState, TConfig>,
-): Feature<TId, TState, TConfig> => feature;

@@ -1,4 +1,4 @@
-import { detectEnvironment, Environment } from '@/utils/base';
+import { ENV, Environment } from '@/utils/base';
 import type { MaybePromise } from '@/utils/type';
 import { isFunction } from '@/utils/type';
 
@@ -195,8 +195,6 @@ const createStorageAdapter = (
   namespace: string,
   backend: StorageBackend | 'auto',
 ): StorageAdapter => {
-  const env = detectEnvironment();
-
   // If a specific backend is requested, try it and fallback to memory
   if (backend !== 'auto') {
     return adapters[backend](namespace) ?? createMemoryAdapter(namespace);
@@ -218,7 +216,7 @@ const createStorageAdapter = (
     [Environment.Web]: [ADAPTER_LOCAL_STORAGE, ADAPTER_MEMORY],
   };
 
-  const priority = priorityMap[env] ?? [ADAPTER_LOCAL_STORAGE, ADAPTER_MEMORY];
+  const priority = priorityMap[ENV] ?? [ADAPTER_LOCAL_STORAGE, ADAPTER_MEMORY];
 
   for (const type of priority) {
     const adapter = adapters[type](namespace);
