@@ -13,8 +13,6 @@ export const LEARNING_PLATFORM_DOMAINS = [
   'intactchinese.csu.edu.tw',
   // 亞東科技大學
   'elearning.aeust.edu.tw',
-  // ahmu
-  'lms.ahmu.edu.cn',
   // 天主教輔仁大學
   'elearn2.fju.edu.tw',
   // 淡江大學-測試站
@@ -45,8 +43,6 @@ export const LEARNING_PLATFORM_DOMAINS = [
   'tronclass.must.edu.tw',
   // “中国历代绘画大系”志愿者宣讲
   'hhdx.zj.zju.edu.cn',
-  // 中医药联盟
-  'zyyszlm.zj.zju.edu.cn',
   // 浙江研究生课程联盟
   'zjyjs.zj.zju.edu.cn',
   // 東吳大學
@@ -67,8 +63,6 @@ export const LEARNING_PLATFORM_DOMAINS = [
   'elearn.evs.edu.tw',
   // 亞洲大學
   'tronclass.asia.edu.tw',
-  // 上海理工大学（私有云）
-  '1906.usst.edu.cn',
   // 学在城院
   'courses.hzcu.edu.cn',
   // 長榮大學

@@ -1,11 +1,11 @@
-import type { GroupBuilder } from '@/core';
+import type {
+  CategoryTranslationRegistry,
+  FeatureGroupTranslation,
+  GroupBuilder,
+} from '@/core';
 import { httpRequestHookManager } from '@/hook/request/http-shared';
 
-export const CourseLearningActivityPluginId = {
-  ForceAllowDownload: 'force-allow-download',
-  ForceAllowForwardSeeking: 'force-allow-forward-seeking',
-  AutoViewVideoActivity: 'auto-view-video-activity',
-} as const;
+import type { CourseGroupI18nType } from '..';
 
 type AutoVideoMode = 'auto' | 'custom';
 
@@ -22,24 +22,30 @@ const hookActivityApi = (key: 'allow_download' | 'allow_forward_seeking') =>
         if (body.data[key]) return; // already allowed, no need to modify
 
         // TODO add log
-        const clonedBody = { ...body };
-        clonedBody.data[key] = true; // force allow
+        const clonedBody = { ...body, data: { ...body.data, [key]: true } };
         return JSON.stringify(clonedBody);
       }
     },
   });
 
-export const createCourseLearningActivityPlugins = (group: GroupBuilder) => {
+export const createCourseLearningActivityPlugins = <
+  TI18n extends CategoryTranslationRegistry = CategoryTranslationRegistry,
+>(
+  group: GroupBuilder<
+    FeatureGroupTranslation<CourseGroupI18nType['learning-activity']>,
+    TI18n
+  >,
+) => {
   group.append({
-    id: CourseLearningActivityPluginId.ForceAllowDownload,
+    id: 'auto-view-video-activity',
     onEnable: () => hookActivityApi('allow_download'),
   });
   group.append({
-    id: CourseLearningActivityPluginId.ForceAllowForwardSeeking,
+    id: 'force-allow-forward-seeking',
     onEnable: () => hookActivityApi('allow_forward_seeking'),
   });
   group.append({
-    id: CourseLearningActivityPluginId.AutoViewVideoActivity,
+    id: 'auto-view-video-activity',
     defaultConfig: {
       playRate: 1.75,
       autoStart: true,

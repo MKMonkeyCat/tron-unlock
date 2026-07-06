@@ -1,16 +1,24 @@
 import { MK_HIDDEN_SCROLL_CLASS } from '@/constants';
-import type { GroupBuilder } from '@/core';
+import type {
+  CategoryTranslationRegistry,
+  FeatureGroupTranslation,
+  GroupBuilder,
+} from '@/core';
 import { skipHookFunc } from '@/hook';
 import { doc, injectStyle, win } from '@/utils';
 
-const GlobalMiscPluginId = {
-  HiddenFooter: 'hidden-footer',
-  InitHideScrollbar: 'init-hide-scrollbar',
-} as const;
+import type { GlobalGroupI18nType } from '.';
 
-export const createGlobalMiscPlugins = (tab: GroupBuilder) => {
+export const createGlobalMiscPlugins = <
+  TI18n extends CategoryTranslationRegistry = CategoryTranslationRegistry,
+>(
+  tab: GroupBuilder<
+    FeatureGroupTranslation<GlobalGroupI18nType['misc']>,
+    TI18n
+  >,
+) => {
   tab.append({
-    id: GlobalMiscPluginId.HiddenFooter,
+    id: 'hidden-footer',
     onEnable() {
       const style = injectStyle(`$css
         .main-content {
@@ -24,7 +32,7 @@ export const createGlobalMiscPlugins = (tab: GroupBuilder) => {
     },
   });
   tab.append({
-    id: GlobalMiscPluginId.InitHideScrollbar,
+    id: 'init-hide-scrollbar',
     onEnable() {
       const toggleHideScroll = (hide: boolean) => {
         doc.body?.classList.toggle(`${MK_HIDDEN_SCROLL_CLASS}-init`, hide);

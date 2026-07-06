@@ -13,7 +13,7 @@ describe('event hooks', () => {
 
   test('keeps listener removal isolated by target and capture', () => {
     initializeEventHooks();
-    const hook = registerEventHook('ping', {});
+    const hook = registerEventHook('ping', { preCallCheck: () => false });
 
     const target = new EventTarget();
     const listener = vi.fn();

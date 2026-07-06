@@ -1,5 +1,6 @@
 import { LEARNING_PLATFORM_DOMAINS } from '../const';
 
+import pLimit from 'p-limit';
 import { describe, test } from 'vitest';
 
 const KEY_PATTERNS = [
@@ -9,20 +10,39 @@ const KEY_PATTERNS = [
   { name: 'globalData', regex: /var\s+globalData\s*=\s*{/ },
 ];
 
-const checkDomain = async (domain: string) => {
-  const resp = await fetch(`https://${domain}`, { redirect: 'follow' });
-  if (!resp.ok) {
-    throw new Error(`[${domain}] HTTP ${resp.status} - cannot load page`);
-  }
+const checkDomain = async (domain: string, timeout: number = 10_000) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-  const text = await resp.text();
-  for (const { name, regex } of KEY_PATTERNS) {
-    if (!regex.test(text)) {
-      const snippet = text.slice(0, 300).replace(/\s+/g, ' ');
-      throw new Error(
-        `[${domain}] Missing pattern "${name}"\nRegex: ${regex}\nSnippet: "${snippet}..."`,
-      );
+  try {
+    const resp = await fetch(`https://${domain}`, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36',
+        Accept:
+          'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+      },
+    });
+    if (!resp.ok) {
+      throw new Error(`[${domain}] HTTP ${resp.status} - cannot load page`);
     }
+
+    const text = await resp.text();
+    for (const { name, regex } of KEY_PATTERNS) {
+      if (!regex.test(text)) {
+        const snippet = text.slice(0, 300).replace(/\s+/g, ' ');
+        throw new Error(
+          `[${domain}] Missing pattern "${name}"\nRegex: ${regex}\nSnippet: "${snippet}..."`,
+        );
+      }
+    }
+  } catch (error) {
+    throw new Error(
+      `[${domain}] ${error instanceof Error ? error.message : error}`,
+    );
+  } finally {
+    clearTimeout(timeoutId);
   }
 };
 
@@ -42,12 +62,9 @@ describe('Suppers Domain', () => {
       (domain) => !IGNORE_DOMAINS.includes(domain) && !domain.includes('*'),
     );
 
+    const limit = pLimit(20);
     await Promise.all(
-      targets.map((domain) =>
-        checkDomain(domain).catch((err) => {
-          throw new Error(`❌ [${domain}] FAILED:\n${err.message}`);
-        }),
-      ),
+      targets.map((domain) => limit(() => checkDomain(domain))),
     );
   }, 30_000);
 });

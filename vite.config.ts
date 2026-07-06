@@ -4,18 +4,19 @@ import {
   minifyCssHtmlPlugin,
   minifyImportedRawCssPlugin,
 } from './plugin/minify-css-html';
-import { userScriptHeaderPlugin } from './plugin/user-script';
 
 import { crx } from '@crxjs/vite-plugin';
 import path from 'path';
 import { defineConfig } from 'vite';
 import zip from 'vite-plugin-zip-pack';
 
+// Chrome extension build: multiple entries (main.ts, relay.ts,
+// background.ts, panel) that share chunked code via ES module imports. For
+// the single-file Tampermonkey userscript build, see vite.config.userscript.ts.
 export default defineConfig({
   plugins: [
     minifyCssHtmlPlugin(),
     minifyImportedRawCssPlugin(),
-    userScriptHeaderPlugin(pkg.version || '0.0.0'),
     crx({ manifest }),
     zip({
       outDir: 'release',

@@ -1,13 +1,22 @@
-import type { GroupBuilder } from '@/core';
+import type {
+  CategoryTranslationRegistry,
+  FeatureGroupTranslation,
+  GroupBuilder,
+} from '@/core';
 import { injectStyle } from '@/utils';
 
-export const ExamMiscPluginId = {
-  HiddenMark: 'hidden-mark',
-} as const;
+import type { ExamGroupI18nType } from '.';
 
-export const createExamMiscPlugins = (group: GroupBuilder) => {
+export const createExamMiscPlugins = <
+  TI18n extends CategoryTranslationRegistry = CategoryTranslationRegistry,
+>(
+  group: GroupBuilder<
+    FeatureGroupTranslation<ExamGroupI18nType['misc']>,
+    TI18n
+  >,
+) => {
   group.append({
-    id: ExamMiscPluginId.HiddenMark,
+    id: 'hidden-mark',
     onEnable() {
       // 實際不須使用 ::before 或 ::after
       const style = injectStyle(`$css

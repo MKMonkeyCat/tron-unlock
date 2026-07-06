@@ -1,27 +1,31 @@
 import type {
+  CategoryTranslationRegistry,
+  FeatureGroupTranslation,
+} from './i18n';
+import type {
   BaseStateType,
   CleanupFn,
   ConfigData,
   FeatureContext,
 } from './types';
-import type { Translations } from '../i18n';
 
 export interface FeatureLifecycle<
   TStatus extends BaseStateType = BaseStateType,
   TConfig extends ConfigData = ConfigData,
-  TI18n extends Translations = Translations,
+  FI18n extends FeatureGroupTranslation = FeatureGroupTranslation,
+  TI18n extends CategoryTranslationRegistry = CategoryTranslationRegistry,
 > {
   onEnable?: (
-    ctx: FeatureContext<TStatus, TConfig, TI18n>,
-  ) => CleanupFn<TStatus, TConfig, TI18n> | void;
-  onDisable?: (ctx: FeatureContext<TStatus, TConfig, TI18n>) => void;
+    ctx: FeatureContext<TStatus, TConfig, FI18n, TI18n>,
+  ) => CleanupFn<TStatus, TConfig, FI18n, TI18n> | void;
+  onDisable?: (ctx: FeatureContext<TStatus, TConfig, FI18n, TI18n>) => void;
   onToggle?: (
-    ctx: FeatureContext<TStatus, TConfig, TI18n>,
+    ctx: FeatureContext<TStatus, TConfig, FI18n, TI18n>,
     enabled: boolean,
   ) => void;
 
   onConfigChange?: (
-    ctx: FeatureContext<TStatus, TConfig, TI18n>,
+    ctx: FeatureContext<TStatus, TConfig, FI18n, TI18n>,
     oldConfig: TConfig,
   ) => void;
 }

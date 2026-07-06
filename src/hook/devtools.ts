@@ -199,7 +199,13 @@ export const setupDisableDevToolDetector = (
     },
     'constructor',
     function (originalConstructor, ...args) {
-      const code = args.at(-1) as string;
+      const lastArg = args.at(-1);
+
+      if (typeof lastArg !== 'string') {
+        return bound.Reflect.apply(originalConstructor, this, args);
+      }
+
+      const code = lastArg;
 
       if (code.replace(/\s|;/g, '').includes('debugger')) {
         return bound.Reflect.apply(originalConstructor, this, [
@@ -220,11 +226,13 @@ export const setupDisableDevToolDetector = (
     'now',
     function (originalDateNow) {
       const actualTime = originalDateNow.call(win.Date);
-      if (actualTime - previousDateTime > 100) {
-        previousDateTime += 16;
-        return previousDateTime;
-      }
+      const gap = actualTime - previousDateTime;
+      // Always resync the baseline to real time so a single large gap
+      // (e.g. a debugger pause) doesn't permanently desync every future
+      // reading from real wall-clock time.
       previousDateTime = actualTime;
+
+      if (gap > 100) return actualTime - (gap - 16);
       return actualTime;
     },
   );
@@ -237,13 +245,10 @@ export const setupDisableDevToolDetector = (
     'now',
     function (originalNow) {
       const actualTime = originalNow.call(win.performance);
-
-      if (actualTime - previousPerformanceTime > 100) {
-        previousPerformanceTime += 16;
-        return previousPerformanceTime;
-      }
-
+      const gap = actualTime - previousPerformanceTime;
       previousPerformanceTime = actualTime;
+
+      if (gap > 100) return actualTime - (gap - 16);
       return actualTime;
     },
   );

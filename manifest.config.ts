@@ -1,6 +1,11 @@
+import { LEARNING_PLATFORM_DOMAINS } from './const';
 import pkg from './package.json';
 
 import { defineManifest } from '@crxjs/vite-plugin';
+
+const matches = LEARNING_PLATFORM_DOMAINS.map(
+  (domain) => `https://${domain}/*`,
+);
 
 export default defineManifest({
   manifest_version: 3,
@@ -13,19 +18,24 @@ export default defineManifest({
     // default_icon: {
     //   48: 'public/logo.png',
     // },
-    // default_popup: 'src/popup/index.html',
+    // no default_popup: keep chrome.action.onClicked usable for placement routing
   },
   content_scripts: [
     {
       js: ['src/main.ts'],
-      matches: ['https://*/*'],
+      matches,
       world: 'MAIN',
       run_at: 'document_start',
     },
+    {
+      js: ['src/relay.ts'],
+      matches,
+      run_at: 'document_start',
+    },
   ],
-  permissions: ['sidePanel', 'contentSettings'],
+  permissions: ['sidePanel', 'contentSettings', 'storage'],
   side_panel: {
-    // default_path: 'src/sidepanel/index.html',
+    default_path: 'src/panel/index.html',
   },
   background: {
     service_worker: 'src/background.ts',

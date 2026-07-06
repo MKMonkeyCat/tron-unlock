@@ -128,6 +128,9 @@ export const initializeEventHooks = (): boolean => {
           listener,
         };
 
+        // A hook with no `preCallCheck` blocks every listener of this event
+        // type unconditionally (used by hooks like copy/paste or fullscreen
+        // that always want to suppress the event, not just conditionally).
         const shouldBlock = currentHooks.some(
           (hook) => (hook.preCallCheck?.(preCallContext) ?? true) === true,
         );

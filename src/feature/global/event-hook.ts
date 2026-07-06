@@ -1,5 +1,9 @@
 import { MK_BASE_CLASS } from '@/constants';
-import type { GroupBuilder } from '@/core';
+import type {
+  CategoryTranslationRegistry,
+  FeatureGroupTranslation,
+  GroupBuilder,
+} from '@/core';
 import type { HookController } from '@/hook';
 import {
   createEventHookGroup,
@@ -12,17 +16,26 @@ import { doc, injectStyle, jQuery, win } from '@/utils';
 
 import { createHumanLikePointerBehavior } from './level-detector';
 
-const GlobalEventHookPluginId = {
-  BlurHook: 'blur-hook',
-  DevtoolHook: 'devtool-hook',
-  IdleCheckerHook: 'idle-checker-hook',
-  CopyPasteCutHook: 'copy-paste-cut-hook',
-  FullscreenHook: 'fullscreen-hook',
-} as const;
+import type { GlobalGroupI18nType } from '.';
 
-export const createGlobalEventHookPlugins = (tab: GroupBuilder) => {
+const isInsideMkComponent = (event: Event): boolean =>
+  event
+    .composedPath()
+    .some(
+      (node) =>
+        node instanceof Element && node.classList.contains(MK_BASE_CLASS),
+    );
+
+export const createGlobalEventHookPlugins = <
+  TI18n extends CategoryTranslationRegistry = CategoryTranslationRegistry,
+>(
+  tab: GroupBuilder<
+    FeatureGroupTranslation<GlobalGroupI18nType['event-hook']>,
+    TI18n
+  >,
+) => {
   tab.append({
-    id: GlobalEventHookPluginId.BlurHook,
+    id: 'blur-hook',
     state: { reenable: null as (() => () => void) | null },
     setup({ state }) {
       const { disable, reenable } = mergeHookControllers(
@@ -46,7 +59,7 @@ export const createGlobalEventHookPlugins = (tab: GroupBuilder) => {
   });
 
   tab.append({
-    id: GlobalEventHookPluginId.DevtoolHook,
+    id: 'devtool-hook',
     state: { controller: null as HookController | null },
     setup({ state }, value) {
       state.controller = setupDisableDevToolDetector();
@@ -64,7 +77,7 @@ export const createGlobalEventHookPlugins = (tab: GroupBuilder) => {
   });
 
   tab.append({
-    id: GlobalEventHookPluginId.IdleCheckerHook,
+    id: 'idle-checker-hook',
     state: {
       showIdleWarning: undefined as boolean | undefined,
       enableIdleWarning: undefined as boolean | undefined,
@@ -131,18 +144,21 @@ export const createGlobalEventHookPlugins = (tab: GroupBuilder) => {
   });
 
   tab.append({
-    id: GlobalEventHookPluginId.CopyPasteCutHook,
+    id: 'copy-paste-cut-hook',
     state: { reenable: null as (() => () => void) | null },
     setup({ state }) {
       const { disable, reenable } = mergeHookControllers(
-        createEventHookGroup([
-          'copy',
-          'selectstart',
-          'cut',
-          'paste',
-          'contextmenu',
-        ]),
-        createKeyboardShortcutHook((_, meta) => {
+        createEventHookGroup(
+          ['copy', 'selectstart', 'cut', 'paste', 'contextmenu'],
+          {
+            preCallCheck({ event }) {
+              return !isInsideMkComponent(event);
+            },
+          },
+        ),
+        createKeyboardShortcutHook((event, meta) => {
+          if (isInsideMkComponent(event)) return false;
+
           // ctrl/cmd + c/v/x
           return meta.isMod && 'cvx'.includes(meta.key);
         }),
@@ -166,7 +182,7 @@ export const createGlobalEventHookPlugins = (tab: GroupBuilder) => {
   });
 
   tab.append({
-    id: GlobalEventHookPluginId.FullscreenHook,
+    id: 'fullscreen-hook',
     state: { reenable: null as (() => () => void) | null },
     setup({ state }) {
       const { disable, reenable } = mergeHookControllers(

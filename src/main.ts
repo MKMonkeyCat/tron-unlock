@@ -1,5 +1,8 @@
 import { GITHUB_REPO_URL, VERSION } from './constants';
-import { initializeFeatures } from './feature';
+import { createPageBridge } from './core/runtime';
+import { initializeFeatures, manager, registry } from './feature';
+import { createPersistingLocalClient } from './ui/panel/client';
+import { mountInlinePanel } from './ui/panel/mount';
 
 const printArtLog = () => {
   const art = `%c
@@ -22,12 +25,29 @@ const printArtLog = () => {
   );
 };
 
-printArtLog();
-
 (async () => {
   await initializeFeatures();
 
-  // initialize ui(setting)
+  const panelClient = await createPersistingLocalClient(manager, registry);
+
+  manager.setupWatcher();
+
+  const panel = mountInlinePanel(panelClient);
+
+  const bridge = createPageBridge();
+  bridge.registerHandler('get-snapshot', () => panelClient.getSnapshot());
+  bridge.registerHandler('set-enabled', (id, enabled) =>
+    panelClient.setEnabled(id as never, enabled as never),
+  );
+  bridge.registerHandler('set-config', (id, patch) =>
+    panelClient.setConfig(id as never, patch as never),
+  );
+  bridge.registerHandler('toggle-panel', () => panel.toggle());
+  panelClient.onChange(() =>
+    bridge.push('snapshot-changed', panelClient.getSnapshot()),
+  );
+
+  printArtLog();
 })();
 
 if (import.meta.env.DEV) {

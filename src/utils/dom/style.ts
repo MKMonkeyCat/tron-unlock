@@ -1,28 +1,41 @@
 import { doc } from './element';
 import { isScriptManager } from '../base';
 
+const createStyle = (css: string) => {
+  const style = doc.createElement('style');
+  style.textContent = css;
+  return style;
+};
+
 export const injectStyle = (
   css: string,
   options: { id?: string; nonce?: string; target?: HTMLElement } = {},
 ): { style: HTMLStyleElement; remove: () => void } => {
-  if (isScriptManager()) {
-    const style = GM_addStyle(css);
-
-    return { style, remove: () => style.remove() };
-  }
-
   const { id, nonce, target = doc.head } = options;
 
-  const style = doc.createElement('style');
+  if (id) {
+    const existing = target.querySelector<HTMLStyleElement>(`#${id}`);
+    if (existing) {
+      return {
+        style: existing,
+        remove: () => {
+          existing.remove();
+        },
+      };
+    }
+  }
 
-  if (id) style.id = id;
-  if (nonce) style.setAttribute('nonce', nonce);
+  const style = isScriptManager() ? GM_addStyle(css) : createStyle(css);
 
-  style.textContent = css;
-  target.appendChild(style);
+  if (!isScriptManager()) {
+    if (id) style.id = id;
+    if (nonce) style.setAttribute('nonce', nonce);
+
+    target.appendChild(style);
+  } else if (id) style.id = id;
 
   const remove = () => {
-    style.parentNode?.removeChild(style);
+    style?.remove?.();
   };
 
   return { style, remove };

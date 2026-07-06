@@ -40,7 +40,7 @@ export const waitForAnyLib = <K extends keyof WinType>(
         clearInterval(timer);
         reject(new Error(`waitForAnyLib timeout: ${String(libName)}`));
       }
-    }, options.timeout ?? WAIT_FOR_LIB_DEFAULT_OPTIONS.timeout);
+    }, options.interval ?? WAIT_FOR_LIB_DEFAULT_OPTIONS.interval);
   });
 };
 

@@ -13,8 +13,9 @@ export const DEFAULT_LOCALE = 'zh_TW' as const;
 const STORAGE_KEY = 'user_language';
 
 const LANGUAGE_STORAGE = {
-  get: (key: string) => localStorage.getItem(key),
-  set: (key: string, lang: LanguageCode) => localStorage.setItem(key, lang),
+  get: (key: string) => globalThis.localStorage?.getItem(key) ?? null,
+  set: (key: string, lang: LanguageCode) =>
+    globalThis.localStorage?.setItem(key, lang),
 };
 
 const FALLBACK_MAP: Record<string, LanguageCode> = {
@@ -96,13 +97,13 @@ export class I18nManager {
 
 //#region I18n Context
 
-type ObjectKeysWithoutSuffix<T extends Translations<unknown>> =
+type ObjectKeysWithoutSuffix<T extends BaseTranslations<unknown>> =
   TranslationKeysOf<T> extends infer K
     ? K extends `${infer Base}{}`
       ? Base
       : never
     : never;
-export class I18nContext<T extends Translations<unknown>> {
+export class I18nContext<T extends BaseTranslations<unknown>> {
   #manager: I18nManager;
   translations: T;
 
@@ -216,11 +217,11 @@ export type TranslationDict = {
   [key: string]: string | string[] | TranslationDict;
 };
 
-export type Translations<T = TranslationDict> = {
+export type BaseTranslations<T = TranslationDict> = {
   [DEFAULT_LOCALE]: T;
 } & { [L in LanguageCode]?: RecursivePartial<T> };
 
-type RecursivePartial<T> = {
+export type RecursivePartial<T> = {
   [P in keyof T]?: T[P] extends (infer U)[]
     ? RecursivePartial<U>[]
     : T[P] extends object
@@ -252,9 +253,8 @@ export type ExtractKeys<T, Prefix extends string = ''> = {
     : never;
 }[keyof T & string];
 
-export type TranslationKeysOf<T extends Translations<unknown>> = ExtractKeys<
-  T[typeof DEFAULT_LOCALE]
->;
+export type TranslationKeysOf<T extends BaseTranslations<unknown>> =
+  ExtractKeys<T[typeof DEFAULT_LOCALE]>;
 
 // type MyTrans = {
 //   zh_TW: {
@@ -271,7 +271,7 @@ export type TranslationKeysOf<T extends Translations<unknown>> = ExtractKeys<
 
 export interface CustomTranslations {}
 
-export type CustomTranslationsType = Translations<CustomTranslations>;
+export type TranslationsType = BaseTranslations<CustomTranslations>;
 
 export const i18nManager = new I18nManager();
-export const i18n = new I18nContext({} as CustomTranslationsType, i18nManager);
+export const i18n = new I18nContext({} as TranslationsType, i18nManager);

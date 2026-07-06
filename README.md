@@ -49,7 +49,12 @@ npm run build
 yarn build
 ```
 
-4. 將 `dist` 目錄下的腳本安裝到 **Tampermonkey**。
+建置會產生兩種輸出：
+
+- `dist-userscript/main.user.js`：單一檔案，貼進 **Tampermonkey** 新增腳本即可（`npm run build:userscript` 可單獨產生）。
+- `dist/`：Chrome 擴充功能（含 side panel），到 `chrome://extensions` 開發者模式「載入未封裝項目」選擇這個目錄；`release/` 底下也會產生對應的 zip（`npm run build:extension` 可單獨產生）。
+
+4. 依你使用的方式安裝上述其中一種（或兩種都裝）。
 
 5. 開啟 **相關 ULearn/TronClass 網站**，腳本將自動啟用。
 
