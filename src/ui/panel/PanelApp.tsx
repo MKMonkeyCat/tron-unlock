@@ -52,9 +52,17 @@ export const PanelApp = ({
   const [handlePosition, setHandlePosition] = useState<PanelPosition | null>(
     null,
   );
+  const [dragging, setDragging] = useState(false);
 
   const [placement, setPlacement] = useState<PanelPlacement>('web');
   const [toggleShortcut, setToggleShortcut] = useState('ctrl+shift+u');
+
+  // Docked mode (side panel) never depends on a persisted handle position,
+  // so it's ready immediately. Inline mode waits for the real persisted
+  // side/position to load before rendering anything - otherwise it would
+  // briefly render docked to the default (right) side, then visibly slide
+  // across the screen once the real (possibly left-docked) position loads.
+  const [ready, setReady] = useState(mode === 'docked');
 
   // load persisted state
   useEffect(() => {
@@ -66,6 +74,7 @@ export const PanelApp = ({
       setHandlePosition(state.bubblePosition);
       setPlacement(state.placement);
       setToggleShortcut(state.toggleShortcut);
+      setReady(true);
     });
 
     return () => {
@@ -143,93 +152,104 @@ export const PanelApp = ({
         }
       : undefined;
 
+  const shellHidden = mode === 'inline' && dragging;
+
   return (
     <div class="mk-component mk-panel-root" data-mode={mode}>
-      <div
-        class={['mk-panel-shell', open && 'is-open'].filter(Boolean).join(' ')}
-        data-mode={mode}
-        data-side={mode === 'inline' && dockedLeft ? 'left' : 'right'}
-        style={shellStyle}
-      >
-        <div class="mk-panel-header">
-          <span class="mk-panel-title">ULearn 設定</span>
+      {(mode === 'docked' || ready) && (
+        <div
+          class={[
+            'mk-panel-shell',
+            open && 'is-open',
+            shellHidden && 'edge-dragging',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+          data-mode={mode}
+          data-side={mode === 'inline' && dockedLeft ? 'left' : 'right'}
+          style={shellStyle}
+        >
+          <div class="mk-panel-header">
+            <span class="mk-panel-title">ULearn 設定</span>
 
-          {mode === 'inline' && (
-            <button
-              type="button"
-              class="mk-panel-close"
-              onClick={toggleOpen}
-              aria-label="Close"
-            >
-              ✕
-            </button>
-          )}
+            {mode === 'inline' && (
+              <button
+                type="button"
+                class="mk-panel-close"
+                onClick={toggleOpen}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          <input
+            class="mk-panel-search"
+            type="text"
+            placeholder="搜尋功能..."
+            value={query}
+            onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
+          />
+
+          <div class="mk-panel-tabs">
+            {filtered.map((category) => (
+              <button
+                key={category.category}
+                type="button"
+                class={`mk-panel-tab${
+                  category.category === active?.category ? ' is-active' : ''
+                }`}
+                onClick={() => setActiveCategory(category.category)}
+              >
+                {category.label}
+              </button>
+            ))}
+          </div>
+
+          <div class="mk-panel-body">
+            {!active || active.groups.length === 0 ? (
+              <div class="mk-panel-empty">沒有符合的功能</div>
+            ) : (
+              active.groups.map((group) => (
+                <div key={group.group ?? 'default'}>
+                  <div class="mk-panel-group-label">{group.label}</div>
+
+                  {group.features.map((item) => (
+                    <FeatureRow
+                      key={item.id}
+                      item={item}
+                      onToggle={(enabled) =>
+                        void client.setEnabled(item.id, enabled)
+                      }
+                      onFieldChange={(key, value) =>
+                        void client.setConfig(item.id, {
+                          [key]: value,
+                        } as Partial<ConfigData>)
+                      }
+                    />
+                  ))}
+                </div>
+              ))
+            )}
+          </div>
+
+          <Footer
+            client={client}
+            categories={categories}
+            placement={placement}
+            canUsePlugin={canUsePlugin}
+            toggleShortcut={toggleShortcut}
+            onPlacementChange={setPlacement}
+          />
         </div>
+      )}
 
-        <input
-          class="mk-panel-search"
-          type="text"
-          placeholder="搜尋功能..."
-          value={query}
-          onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
-        />
-
-        <div class="mk-panel-tabs">
-          {filtered.map((category) => (
-            <button
-              key={category.category}
-              type="button"
-              class={`mk-panel-tab${
-                category.category === active?.category ? ' is-active' : ''
-              }`}
-              onClick={() => setActiveCategory(category.category)}
-            >
-              {category.label}
-            </button>
-          ))}
-        </div>
-
-        <div class="mk-panel-body">
-          {!active || active.groups.length === 0 ? (
-            <div class="mk-panel-empty">沒有符合的功能</div>
-          ) : (
-            active.groups.map((group) => (
-              <div key={group.group ?? 'default'}>
-                <div class="mk-panel-group-label">{group.label}</div>
-
-                {group.features.map((item) => (
-                  <FeatureRow
-                    key={item.id}
-                    item={item}
-                    onToggle={(enabled) =>
-                      void client.setEnabled(item.id, enabled)
-                    }
-                    onFieldChange={(key, value) =>
-                      void client.setConfig(item.id, {
-                        [key]: value,
-                      } as Partial<ConfigData>)
-                    }
-                  />
-                ))}
-              </div>
-            ))
-          )}
-        </div>
-
-        <Footer
-          client={client}
-          categories={categories}
-          placement={placement}
-          canUsePlugin={canUsePlugin}
-          toggleShortcut={toggleShortcut}
-          onPlacementChange={setPlacement}
-        />
-      </div>
-
-      {mode === 'inline' && (
+      {mode === 'inline' && ready && (
         <EdgeHandle
           position={position}
           onClick={toggleOpen}
+          onDraggingChange={setDragging}
           onMove={(pos) => {
             setOpen(false);
             setHandlePosition(pos);

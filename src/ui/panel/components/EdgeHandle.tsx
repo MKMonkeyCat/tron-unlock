@@ -52,9 +52,15 @@ export interface EdgeHandleProps {
   position: PanelPosition;
   onMove(position: PanelPosition): void;
   onClick(): void;
+  onDraggingChange?(dragging: boolean): void;
 }
 
-export const EdgeHandle = ({ position, onMove, onClick }: EdgeHandleProps) => {
+export const EdgeHandle = ({
+  position,
+  onMove,
+  onClick,
+  onDraggingChange,
+}: EdgeHandleProps) => {
   const handleRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragState | null>(null);
 
@@ -97,7 +103,10 @@ export const EdgeHandle = ({ position, onMove, onClick }: EdgeHandleProps) => {
       drag.moved = Math.hypot(dx, dy);
 
       if (!dragActive && drag.moved < DRAG_THRESHOLD) return;
-      if (!dragActive) setDragActive(true);
+      if (!dragActive) {
+        setDragActive(true);
+        onDraggingChange?.(true);
+      }
 
       onMove(ballTopLeft(e.clientX, e.clientY));
     });
@@ -108,6 +117,7 @@ export const EdgeHandle = ({ position, onMove, onClick }: EdgeHandleProps) => {
 
       setDragging(false);
       setDragActive(false);
+      onDraggingChange?.(false);
 
       if (!drag) return;
 
