@@ -1,16 +1,15 @@
 import type { ConfigData, FeatureId } from '@/core/feature/types';
 import type { BridgeRequest, BridgeResponse } from '@/core/runtime';
 import { isBridgeMessage, MK_BRIDGE_MARKER } from '@/core/runtime';
-
-import type { PanelCategoryItem, PanelClient } from './client';
+import type { PanelCategoryItem, PanelClient } from '@/ui/panel/client';
 
 const PORT_NAME = 'mk-panel';
 
 /**
- * Used only by the Chrome side panel page (`src/panel/`), a separate
+ * Used only by the Chrome side panel page (`extension/panel/`), a separate
  * extension JS realm with no direct access to the content script's
  * `FeatureManager`. Talks to it over a `chrome.tabs.connect` port to
- * `src/relay.ts` (ISOLATED world), which forwards into the MAIN-world page
+ * `extension/relay.ts` (ISOLATED world), which forwards into the MAIN-world page
  * bridge (`createPageBridge()` in `src/main.ts`).
  */
 export const createRemotePanelClient = (): PanelClient => {

@@ -1,5 +1,6 @@
 import { PanelApp } from '@/ui/panel/PanelApp';
-import { createRemotePanelClient } from '@/ui/panel/remote-client';
+
+import { createRemotePanelClient } from './remote-client';
 
 import { render } from 'preact';
 

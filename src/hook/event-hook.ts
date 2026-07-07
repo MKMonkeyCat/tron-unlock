@@ -140,6 +140,8 @@ export const initializeEventHooks = (): boolean => {
         }
       };
 
+      console.log(this);
+
       const capture = getCaptureFlag(options);
       const listenerKey = `${type}`;
       const perTarget = getTargetListenerMap(this);
