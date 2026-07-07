@@ -84,19 +84,31 @@ export const initializeEventHooks = (): boolean => {
   addEventListenerHookController = hookManager.register(
     maybeEventTarget.prototype,
     'addEventListener',
-    function (this: EventTarget, original, type, listener, options) {
+    function (
+      this: EventTarget | undefined,
+      original,
+      type,
+      listener,
+      options,
+    ) {
+      // Unqualified global calls like `addEventListener('pagehide', fn)`
+      // (as opposed to `window.addEventListener(...)`) reach native/Proxy
+      // functions with `this === undefined` — browsers still accept this
+      // for Window's own methods, but we need a real target for our maps.
+      const target = this ?? globalThis;
+
       if (!listener || shouldSkipListenerHook(listener)) {
-        return original.call(this, type, listener, options);
+        return original.call(target, type, listener, options);
       }
 
       const activeHooks = getActiveEventHooks(type);
       if (activeHooks.length === 0) {
-        return original.call(this, type, listener, options);
+        return original.call(target, type, listener, options);
       }
 
       const preHookContext: EventHookPreHookContext = {
         type,
-        target: this,
+        target,
         listener,
         options,
       };
@@ -106,24 +118,24 @@ export const initializeEventHooks = (): boolean => {
           (hook) => hook.preHookCheck?.(preHookContext) === false,
         )
       ) {
-        return original.call(this, type, listener, options);
+        return original.call(target, type, listener, options);
       }
 
       const listenerCallable = getListenerCallable(listener);
       if (!listenerCallable) {
-        return original.call(this, type, listener, options);
+        return original.call(target, type, listener, options);
       }
 
       const wrapped: EventListener = (event) => {
         const currentHooks = getActiveEventHooks(type);
         if (currentHooks.length === 0) {
-          listenerCallable.call(this, event);
+          listenerCallable.call(target, event);
           return;
         }
 
         const preCallContext: EventHookPreCallContext = {
           type,
-          target: this,
+          target,
           event,
           listener,
         };
@@ -136,15 +148,13 @@ export const initializeEventHooks = (): boolean => {
         );
 
         if (!shouldBlock) {
-          listenerCallable.call(this, event);
+          listenerCallable.call(target, event);
         }
       };
 
-      console.log(this);
-
       const capture = getCaptureFlag(options);
       const listenerKey = `${type}`;
-      const perTarget = getTargetListenerMap(this);
+      const perTarget = getTargetListenerMap(target);
       const perListener = perTarget.get(listener) ?? new Map();
       const perType = perListener.get(listenerKey) ?? new Map();
 
@@ -152,25 +162,33 @@ export const initializeEventHooks = (): boolean => {
       perListener.set(listenerKey, perType);
       perTarget.set(listener, perListener);
 
-      return original.call(this, type, wrapped, options);
+      return original.call(target, type, wrapped, options);
     },
   );
 
   removeEventListenerHookController = hookManager.register(
     maybeEventTarget.prototype,
     'removeEventListener',
-    function (this: EventTarget, original, type, listener, options) {
+    function (
+      this: EventTarget | undefined,
+      original,
+      type,
+      listener,
+      options,
+    ) {
+      const target = this ?? globalThis;
+
       if (!listener) {
-        return original.call(this, type, listener, options);
+        return original.call(target, type, listener, options);
       }
 
       const capture = getCaptureFlag(options);
       const wrapped = wrappedListenerMap
-        .get(this)
+        .get(target)
         ?.get(listener)
         ?.get(`${type}`)
         ?.get(capture);
-      return original.call(this, type, wrapped ?? listener, options);
+      return original.call(target, type, wrapped ?? listener, options);
     },
   );
 
