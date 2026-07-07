@@ -1,0 +1,16 @@
+{
+  "zh_TW": {
+    "name": "考試",
+    "groups": {
+      "misc": {
+        "name": "雜項",
+        "features": {
+          "hidden-mark": {
+            "name": "隱藏浮水印",
+            "description": "隱藏考試頁面上的浮水印元素。"
+          }
+        }
+      }
+    }
+  }
+}

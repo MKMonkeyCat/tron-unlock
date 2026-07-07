@@ -5,7 +5,7 @@ import eslintPluginSimpleImportSort from 'eslint-plugin-simple-import-sort';
 
 export default [
   {
-    files: ['**/*.ts'],
+    files: ['**/*.ts', '**/*.tsx'],
     ignores: ['dist', 'node_modules', 'build'],
 
     languageOptions: {
@@ -13,7 +13,10 @@ export default [
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
-        project: ['./tsconfig.json'],
+        project: ['./tsconfig.json', './tsconfig.test.json'],
+        ecmaFeatures: {
+          jsx: true,
+        },
       },
     },
 

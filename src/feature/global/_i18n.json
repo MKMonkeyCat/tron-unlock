@@ -1,0 +1,45 @@
+{
+  "zh_TW": {
+    "name": "全域",
+    "groups": {
+      "event-hook": {
+        "name": "事件攔截",
+        "features": {
+          "blur-hook": {
+            "name": "分頁切換偵測繞過",
+            "description": "避免頁面偵測到視窗/分頁切換、失焦等事件。"
+          },
+          "devtool-hook": {
+            "name": "開發者工具偵測繞過",
+            "description": "避免頁面偵測到開發者工具開啟或除錯行為。"
+          },
+          "idle-checker-hook": {
+            "name": "閒置偵測繞過",
+            "description": "模擬滑鼠活動並隱藏閒置警告彈窗。"
+          },
+          "copy-paste-cut-hook": {
+            "name": "複製貼上限制繞過",
+            "description": "允許頁面上的複製、剪下、貼上與右鍵選單。"
+          },
+          "fullscreen-hook": {
+            "name": "全螢幕偵測繞過",
+            "description": "避免頁面偵測到退出全螢幕。"
+          }
+        }
+      },
+      "misc": {
+        "name": "雜項",
+        "features": {
+          "hidden-footer": {
+            "name": "隱藏頁腳",
+            "description": "隱藏頁面底部的頁腳區塊，避免多餘留白。"
+          },
+          "init-hide-scrollbar": {
+            "name": "載入時隱藏捲軸",
+            "description": "頁面載入完成前先隱藏捲軸，避免版面閃動。"
+          }
+        }
+      }
+    }
+  }
+}

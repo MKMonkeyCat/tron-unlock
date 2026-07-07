@@ -1,34 +1,33 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
-    "target": "ES2022",
-    "useDefineForClassFields": true,
-    "module": "ESNext",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "skipLibCheck": true,
-
-    /* Bundler mode */
+    "target": "es2023",
+    "module": "esnext",
+    "lib": ["ES2023", "DOM"],
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
-    "moduleDetection": "force",
     "noEmit": true,
-
-    /* Linting */
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true,
+    "resolveJsonModule": true,
+    "types": ["vite/client"],
     "paths": {
-      "@": ["src"],
-      "@/*": ["src/*"],
-      "#": ["src/utils"],
-      "#/*": ["src/utils/*"],
-      "~": ["src/store"],
-      "~/*": ["src/store/*"]
-    }
+      "@": ["./src"],
+      "@/*": ["./src/*"],
+
+      /* Preact Config */
+      "react": ["./node_modules/preact/compat/"],
+      "react-dom": ["./node_modules/preact/compat/"]
+    },
+
+    /* Preact Config */
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "skipLibCheck": true
   },
-  "include": ["src", "vite.config.ts"]
+  "include": [
+    "src",
+    "plugin",
+    "vite.config.ts",
+    "vite.config.userscript.ts",
+    "manifest.config.ts",
+    "const.ts"
+  ],
+  "exclude": ["./node_modules", "./dist"]
 }

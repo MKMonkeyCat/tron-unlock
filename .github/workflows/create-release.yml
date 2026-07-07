@@ -43,15 +43,10 @@ jobs:
           fi
 
       - name: Build all
-        run: yarn build
-
-      - name: Replace version placeholder in dist/*.js
         if: steps.release_type.outputs.type != 'skip'
-        run: |
-          VERSION="${{ steps.release_type.outputs.tag_name }}"
-          for f in dist/*.js; do
-            sed -i "s/{VERSION_PLACEHOLDER}/$VERSION/g" "$f"
-          done
+        run: yarn build
+        env:
+          VITE_APP_VERSION: ${{ steps.release_type.outputs.tag_name }}
 
       - name: Generate release notes
         id: release_notes
