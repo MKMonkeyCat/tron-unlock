@@ -10,7 +10,7 @@
 ## 環境需求
 
 - Node.js 20 以上
-- npm 或 yarn
+- npm
 - 瀏覽器需安裝 [Tampermonkey](https://www.tampermonkey.net/)
 
 ## 注意事項
@@ -37,16 +37,12 @@ cd tron-unlock
 
 ```bash
 npm install
-# 或
-yarn install
 ```
 
 3. 建置專案：
 
 ```bash
 npm run build
-# 或
-yarn build
 ```
 
 建置會產生兩種輸出：

@@ -1,3 +1,4 @@
+import { VERSION } from '@/constants';
 import type { ConfigData, FeatureId } from '@/core/feature/types';
 
 import type { PanelClient } from '../client';
@@ -86,6 +87,7 @@ export const Footer = ({
         </select>
       ) : null}
       <span class="mk-panel-shortcut-hint">{toggleShortcut}</span>
+      <span class="mk-panel-version">{VERSION}</span>
     </div>
   );
 };

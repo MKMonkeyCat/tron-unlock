@@ -2,8 +2,6 @@ name: Create Release
 
 on:
   push:
-    # branches:
-    #   - main
     tags:
       - v*.*.*
   workflow_dispatch:
@@ -14,6 +12,9 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    # Tag pushes always build a versioned release; workflow_dispatch is only
+    # meaningful when run against main, where it produces a "latest" build.
+    if: github.ref_type == 'tag' || github.ref_name == 'main'
 
     steps:
       - name: Checkout repository
@@ -23,55 +24,57 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: yarn
+          cache: npm
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: npm ci
 
-      - name: Determine release type
-        id: release_type
+      - name: Resolve release version
+        id: version
         run: |
-          if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
-            echo "type=latest" >> $GITHUB_OUTPUT
-            SHORT_SHA=$(git rev-parse --short HEAD)
-            echo "tag_name=$SHORT_SHA" >> $GITHUB_OUTPUT
-          elif [[ "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "type=release" >> $GITHUB_OUTPUT
-            echo "tag_name=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            echo "type=release" >> "$GITHUB_OUTPUT"
+            echo "tag_name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
           else
-            echo "type=skip" >> $GITHUB_OUTPUT
+            SHORT_SHA=$(git rev-parse --short HEAD)
+            echo "type=latest" >> "$GITHUB_OUTPUT"
+            echo "tag_name=$SHORT_SHA" >> "$GITHUB_OUTPUT"
+            echo "version=0.0.0-dev.$SHORT_SHA" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Build all
-        if: steps.release_type.outputs.type != 'skip'
-        run: yarn build
+      - name: Sync package version
+        run: npm pkg set version="${{ steps.version.outputs.version }}"
+
+      - name: Build extension and userscript
+        run: npm run build
         env:
-          VITE_APP_VERSION: ${{ steps.release_type.outputs.tag_name }}
+          VITE_APP_VERSION: ${{ steps.version.outputs.version }}
+
+      - name: Collect release artifacts
+        run: |
+          mkdir -p release
+          cp dist-userscript/main.user.js "release/TronUnlock-${{ steps.version.outputs.version }}.user.js"
 
       - name: Generate release notes
         id: release_notes
-        if: steps.release_type.outputs.type != 'skip'
         run: |
-          TYPE="${{ steps.release_type.outputs.type }}"
-          TAG="${{ steps.release_type.outputs.tag_name }}"
-
-          if [[ "$TYPE" == "release" ]]; then
+          if [[ "${{ steps.version.outputs.type }}" == "release" ]]; then
             NOTES=$(git log -1 --pretty=format:"%s%n%n%b")
           else
             NOTES=$(git log -10 --pretty=format:"- %s (%h)")
           fi
 
-          echo "body<<EOF" >> $GITHUB_OUTPUT
-          echo "$NOTES" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "body<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$NOTES" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
-        if: steps.release_type.outputs.type != 'skip'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.release_type.outputs.tag_name }}
-          name: ${{ steps.release_type.outputs.type == 'release' && 'Release' || 'Latest Version' }} ${{ steps.release_type.outputs.tag_name }}
+          tag_name: ${{ steps.version.outputs.tag_name }}
+          name: ${{ steps.version.outputs.type == 'release' && 'Release' || 'Latest Version' }} ${{ steps.version.outputs.tag_name }}
           body: ${{ steps.release_notes.outputs.body }}
-          files: dist/*
+          files: release/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
