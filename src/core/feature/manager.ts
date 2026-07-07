@@ -36,15 +36,19 @@ export class FeatureManager {
 
   constructor(private registry: FeatureRegistry) {}
 
-  setupWatcher() {
+  async setupWatcher() {
     const notify = skipHookFunc(() => this.update(getRouteSnapshot()));
 
     const patchHistoryMethod = (key: 'pushState' | 'replaceState') => {
-      hookManager.register(win.history, key, function (original, ...args) {
-        const result = bound.Reflect.apply(original, this, args);
-        notify();
-        return result;
-      });
+      hookManager.register(
+        win.history,
+        key,
+        async function (original, ...args) {
+          const result = bound.Reflect.apply(original, this, args);
+          await notify();
+          return result;
+        },
+      );
     };
 
     patchHistoryMethod('pushState');
@@ -53,7 +57,7 @@ export class FeatureManager {
     win.addEventListener('popstate', notify);
     win.addEventListener('hashchange', notify);
 
-    notify();
+    await notify();
   }
 
   onChange(listener: (event: FeatureChangeEvent) => void) {
@@ -65,8 +69,7 @@ export class FeatureManager {
       id: feature.id,
       category: feature.category,
       group: feature.group,
-      enabled:
-        this.#overrides.get(feature.id) ?? this.#running.has(feature.id),
+      enabled: this.#overrides.get(feature.id) ?? this.#running.has(feature.id),
       config: this.#configs.get(feature.id) ?? feature.defaultConfig ?? {},
       fields: feature.fields ?? [],
     }));

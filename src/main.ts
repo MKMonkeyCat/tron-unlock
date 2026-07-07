@@ -27,20 +27,19 @@ const printArtLog = () => {
 
 (async () => {
   await initializeFeatures();
+  await manager.setupWatcher();
 
   const panelClient = await createPersistingLocalClient(manager, registry);
 
-  manager.setupWatcher();
-
-  const panel = mountInlinePanel(panelClient);
+  const panel = await mountInlinePanel(panelClient);
 
   const bridge = createPageBridge();
   bridge.registerHandler('get-snapshot', () => panelClient.getSnapshot());
   bridge.registerHandler('set-enabled', (id, enabled) =>
-    panelClient.setEnabled(id as never, enabled as never),
+    panelClient.setEnabled(id, enabled),
   );
   bridge.registerHandler('set-config', (id, patch) =>
-    panelClient.setConfig(id as never, patch as never),
+    panelClient.setConfig(id, patch),
   );
   bridge.registerHandler('toggle-panel', () => panel.toggle());
   panelClient.onChange(() =>

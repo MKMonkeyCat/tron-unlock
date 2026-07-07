@@ -1,9 +1,10 @@
 import { Builder, FeatureRegistry } from '../../src/core/feature/build';
 import { createCourseFeatureModule } from '../../src/feature/course';
-import { CourseLearningActivityPluginId } from '../../src/feature/course/learning-activity';
 import { createExamFeatureModule } from '../../src/feature/exam';
-import { ExamMiscPluginId } from '../../src/feature/exam/misc';
-import { initializeFeatures, registry as sharedRegistry } from '../../src/feature/index';
+import {
+  initializeFeatures,
+  registry as sharedRegistry,
+} from '../../src/feature/index';
 
 import { describe, expect, test } from 'vitest';
 
@@ -26,9 +27,7 @@ describe('each category loads its own _i18n.json and registers it via tab.withI1
       'misc' as never,
     );
     expect(examMisc.t('name' as never)).toBe('雜項');
-    expect(
-      examMisc.t(`features.${ExamMiscPluginId.HiddenMark}.name` as never),
-    ).toBe('隱藏浮水印');
+    expect(examMisc.t(`features.exams.misc.name` as never)).toBe('隱藏浮水印');
 
     // getCategoryI18nContext exposes the same underlying store as
     // getGroupI18nContext, just scoped one level up (the whole category).
@@ -44,12 +43,12 @@ describe('each category loads its own _i18n.json and registers it via tab.withI1
     );
     expect(
       courseActivity.t(
-        `features.${CourseLearningActivityPluginId.ForceAllowDownload}.name` as never,
+        `features.courses.learning-activity.force-allow-download.name` as never,
       ),
     ).toBe('強制允許下載');
     expect(
       courseActivity.t(
-        `features.${CourseLearningActivityPluginId.AutoViewVideoActivity}.fields.playRate` as never,
+        `features.courses.learning-activity.auto-view-video-activity.fields.playRate` as never,
       ),
     ).toBe('播放速率');
   });
@@ -58,7 +57,9 @@ describe('each category loads its own _i18n.json and registers it via tab.withI1
     await initializeFeatures();
 
     expect(
-      sharedRegistry.i18n.getCategoryI18nContext('exam' as never).t('name' as never),
+      sharedRegistry.i18n
+        .getCategoryI18nContext('exam' as never)
+        .t('name' as never),
     ).toBe('考試');
     expect(
       sharedRegistry.i18n

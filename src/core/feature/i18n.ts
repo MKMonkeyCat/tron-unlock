@@ -2,10 +2,15 @@ import type { FeatureCategoryId, FeatureGroupId, LeafFeatureId } from './types';
 import type { BaseTranslations, RecursivePartial } from '../i18n';
 import { DEFAULT_LOCALE, I18nContext, i18nManager } from '../i18n';
 
+export interface FeatureFieldTranslationInfo {
+  name: string;
+  description?: string;
+}
+
 export interface FeatureTranslationInfo {
   name: string;
   description?: string;
-  fields?: Record<string, string>;
+  fields?: Record<string, FeatureFieldTranslationInfo>;
 }
 
 export interface BaseFeatureGroupTranslation {

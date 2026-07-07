@@ -18,14 +18,13 @@ export const defaultHandlePosition = (): PanelPosition => ({
   y: win.innerHeight / 2 - HANDLE_HEIGHT / 2,
 });
 
-const clampY = (y: number) =>
+const clampYFor = (y: number, viewportHeight: number) =>
   Math.min(
     Math.max(y, EDGE_MARGIN),
-    win.innerHeight - HANDLE_HEIGHT - EDGE_MARGIN,
+    viewportHeight - HANDLE_HEIGHT - EDGE_MARGIN,
   );
 
-const snapX = (x: number) =>
-  x + HANDLE_WIDTH / 2 < win.innerWidth / 2 ? 0 : win.innerWidth - HANDLE_WIDTH;
+const clampY = (y: number) => clampYFor(y, win.innerHeight);
 
 export const isDockedLeft = (position: PanelPosition) =>
   position.x + HANDLE_WIDTH / 2 < win.innerWidth / 2;
@@ -33,6 +32,38 @@ export const isDockedLeft = (position: PanelPosition) =>
 const ballTopLeft = (clientX: number, clientY: number) => ({
   x: clientX - DRAG_BALL_SIZE / 2,
   y: clampY(clientY - DRAG_BALL_SIZE / 2),
+});
+
+export interface ViewportSize {
+  width: number;
+  height: number;
+}
+
+/**
+ * Docked side + y as a %-of-height - resolution independent, so a position
+ * captured against one viewport (a resize, a saved/reloaded session) still
+ * lands in the same relative spot against a differently sized one.
+ */
+export interface RelativeBubblePosition {
+  side: 'left' | 'right';
+  yPercent: number;
+}
+
+export const toRelativePosition = (
+  position: PanelPosition,
+  viewport: ViewportSize,
+): RelativeBubblePosition => ({
+  side:
+    position.x + HANDLE_WIDTH / 2 < viewport.width / 2 ? 'left' : 'right',
+  yPercent: (position.y / viewport.height) * 100,
+});
+
+export const fromRelativePosition = (
+  relative: RelativeBubblePosition,
+  viewport: ViewportSize,
+): PanelPosition => ({
+  x: relative.side === 'left' ? 0 : viewport.width - HANDLE_WIDTH,
+  y: clampYFor((relative.yPercent / 100) * viewport.height, viewport.height),
 });
 
 interface DragState {
@@ -63,6 +94,10 @@ export const EdgeHandle = ({
 }: EdgeHandleProps) => {
   const handleRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragState | null>(null);
+  const viewportRef = useRef<ViewportSize>({
+    width: win.innerWidth,
+    height: win.innerHeight,
+  });
 
   const [dragging, setDragging] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -147,7 +182,14 @@ export const EdgeHandle = ({
 
   useEffect(() => {
     const onResize = skipHookFunc(() => {
-      onMove({ x: snapX(position.x), y: clampY(position.y) });
+      // Read the docked side + y% against the viewport size the position
+      // was last valid for, then re-derive pixels against the new one - a
+      // plain re-clamp would compare stale pixels to the new width/height
+      // and could flip sides or drift toward the top on a big resize.
+      const relative = toRelativePosition(position, viewportRef.current);
+
+      viewportRef.current = { width: win.innerWidth, height: win.innerHeight };
+      onMove(fromRelativePosition(relative, viewportRef.current));
     });
 
     win.addEventListener('resize', onResize);

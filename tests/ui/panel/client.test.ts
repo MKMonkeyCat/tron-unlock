@@ -26,7 +26,13 @@ describe('createLocalPanelClient', () => {
               misc: {
                 name: '雜項',
                 features: {
-                  demo: { name: '示範功能', description: '示範描述' },
+                  demo: {
+                    name: '示範功能',
+                    description: '示範描述',
+                    fields: {
+                      foo: { name: '示範欄位', description: '示範欄位描述' },
+                    },
+                  },
                 },
               },
             },
@@ -58,6 +64,7 @@ describe('createLocalPanelClient', () => {
     expect(snapshot[0]?.groups[0]?.features[0]?.label).toEqual({
       name: '示範功能',
       description: '示範描述',
+      fields: { foo: { name: '示範欄位', description: '示範欄位描述' } },
     });
     expect(snapshot[0]?.groups[0]?.features[0]?.enabled).toBe(true);
 
@@ -102,5 +109,6 @@ describe('createLocalPanelClient', () => {
     expect(
       snapshot[0]?.groups[0]?.features[0]?.label.description,
     ).toBeUndefined();
+    expect(snapshot[0]?.groups[0]?.features[0]?.label.fields).toEqual({});
   });
 });

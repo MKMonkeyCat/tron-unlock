@@ -7,7 +7,11 @@ export interface FeatureRowProps {
   onFieldChange: (key: string, value: unknown) => void;
 }
 
-export const FeatureRow = ({ item, onToggle, onFieldChange }: FeatureRowProps) => {
+export const FeatureRow = ({
+  item,
+  onToggle,
+  onFieldChange,
+}: FeatureRowProps) => {
   return (
     <div class="mk-panel-row">
       <div class="mk-panel-row-main">
@@ -21,9 +25,7 @@ export const FeatureRow = ({ item, onToggle, onFieldChange }: FeatureRowProps) =
           <input
             type="checkbox"
             checked={item.enabled}
-            onChange={(e) =>
-              onToggle((e.target as HTMLInputElement).checked)
-            }
+            onChange={(e) => onToggle((e.target as HTMLInputElement).checked)}
           />
           <span class="mk-panel-switch-knob" />
         </label>
@@ -34,6 +36,8 @@ export const FeatureRow = ({ item, onToggle, onFieldChange }: FeatureRowProps) =
             <Field
               key={field.key}
               field={field}
+              label={item.label.fields[field.key]?.name}
+              description={item.label.fields[field.key]?.description}
               value={item.config[field.key]}
               onChange={(value) => onFieldChange(field.key, value)}
             />

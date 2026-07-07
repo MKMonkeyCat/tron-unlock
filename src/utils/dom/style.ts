@@ -9,7 +9,7 @@ const createStyle = (css: string) => {
 
 export const injectStyle = (
   css: string,
-  options: { id?: string; nonce?: string; target?: HTMLElement } = {},
+  options: { id?: string; nonce?: string; target?: ParentNode } = {},
 ): { style: HTMLStyleElement; remove: () => void } => {
   const { id, nonce, target = doc.head } = options;
 

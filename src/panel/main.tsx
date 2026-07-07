@@ -6,4 +6,7 @@ import { render } from 'preact';
 const client = createRemotePanelClient();
 const root = document.getElementById('root')!;
 
-render(<PanelApp client={client} mode="docked" canUsePlugin />, root);
+render(
+  <PanelApp client={client} container={root} mode="docked" canUsePlugin />,
+  root,
+);

@@ -1,12 +1,11 @@
 import type { ConfigData, FeatureId } from '@/core/feature/types';
 
-import type { PanelCategoryItem, PanelClient } from '../client';
+import type { PanelClient } from '../client';
 import type { PanelPlacement } from '../persistence';
 import { loadPanelState, savePlacement } from '../persistence';
 
 export interface FooterProps {
   client: PanelClient;
-  categories: PanelCategoryItem[];
   placement: PanelPlacement;
   canUsePlugin: boolean;
   toggleShortcut: string;
@@ -15,7 +14,6 @@ export interface FooterProps {
 
 export const Footer = ({
   client,
-  categories,
   placement,
   canUsePlugin,
   toggleShortcut,
@@ -53,23 +51,16 @@ export const Footer = ({
           await client.setEnabled(id as FeatureId, enabled);
         }
         for (const [id, config] of Object.entries(parsed.configs ?? {})) {
-          await client.setConfig(id as FeatureId, config as Partial<ConfigData>);
+          await client.setConfig(
+            id as FeatureId,
+            config as Partial<ConfigData>,
+          );
         }
       } catch {
         // Ignore malformed import files.
       }
     };
     input.click();
-  };
-
-  const handleReset = async () => {
-    for (const category of categories) {
-      for (const group of category.groups) {
-        for (const feature of group.features) {
-          await client.setEnabled(feature.id, null);
-        }
-      }
-    }
   };
 
   return (
@@ -79,9 +70,6 @@ export const Footer = ({
       </button>
       <button type="button" class="mk-panel-footer-btn" onClick={handleImport}>
         匯入
-      </button>
-      <button type="button" class="mk-panel-footer-btn" onClick={handleReset}>
-        重設開關
       </button>
       {canUsePlugin ? (
         <select

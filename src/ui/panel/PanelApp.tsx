@@ -15,7 +15,6 @@ import {
   type PanelPlacement,
   type PanelPosition,
   saveBubblePosition,
-  savePanelOpen,
 } from './persistence';
 import style from './style.scss?inline';
 
@@ -26,6 +25,7 @@ export interface PanelAppProps {
   mode: 'inline' | 'docked';
   canUsePlugin: boolean;
   onToggleReady?: (toggle: () => void) => void;
+  container: ParentNode;
 }
 
 export const PanelApp = ({
@@ -33,9 +33,10 @@ export const PanelApp = ({
   mode,
   canUsePlugin,
   onToggleReady,
+  container,
 }: PanelAppProps) => {
   useEffect(() => {
-    const { remove } = injectStyle(style, { id: 'panel-app-style' });
+    const { remove } = injectStyle(style, { target: container });
 
     return remove;
   }, []);
@@ -103,15 +104,7 @@ export const PanelApp = ({
   }, [onToggleReady]);
 
   const toggleOpen = () => {
-    setOpen((prev) => {
-      const next = !prev;
-
-      if (mode === 'inline') {
-        void savePanelOpen(next);
-      }
-
-      return next;
-    });
+    setOpen((prev) => !prev);
   };
 
   // search filter
@@ -127,6 +120,9 @@ export const PanelApp = ({
             ...group,
             features: group.features.filter(
               (feature) =>
+                feature.id
+                  .split('.')
+                  .some((part) => part.toLowerCase().includes(q)) ||
                 feature.label.name.toLowerCase().includes(q) ||
                 (feature.label.description ?? '').toLowerCase().includes(q),
             ),
@@ -236,7 +232,6 @@ export const PanelApp = ({
 
           <Footer
             client={client}
-            categories={categories}
             placement={placement}
             canUsePlugin={canUsePlugin}
             toggleShortcut={toggleShortcut}

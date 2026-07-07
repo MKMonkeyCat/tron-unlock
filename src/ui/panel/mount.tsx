@@ -20,7 +20,8 @@ const parseShortcut = (shortcut: string) => {
     .map((part) => part.trim());
 
   return {
-    mod: parts.includes('ctrl') || parts.includes('cmd') || parts.includes('meta'),
+    mod:
+      parts.includes('ctrl') || parts.includes('cmd') || parts.includes('meta'),
     shift: parts.includes('shift'),
     alt: parts.includes('alt'),
     key: parts.filter((part) => !MODIFIER_KEYS.has(part)).pop() ?? '',
@@ -53,29 +54,19 @@ const appendWhenBodyReady = (el: HTMLElement) => {
   observer.observe(doc.documentElement, { childList: true });
 };
 
-export const mountInlinePanel = (client: PanelClient): InlinePanelHandle => {
-  const container = doc.createElement('div');
-  container.id = 'mk-panel-container';
-  appendWhenBodyReady(container);
+export const mountInlinePanel = async (
+  client: PanelClient,
+): Promise<InlinePanelHandle> => {
+  const host = doc.createElement('div');
+  host.id = 'mk-panel-container';
+  appendWhenBodyReady(host);
 
   const canUsePlugin =
     ENV === Environment.ChromeExtension || ENV === Environment.FirefoxExtension;
 
   let toggle = () => {};
 
-  render(
-    <PanelApp
-      client={client}
-      mode="inline"
-      canUsePlugin={canUsePlugin}
-      onToggleReady={(fn) => {
-        toggle = fn;
-      }}
-    />,
-    container,
-  );
-
-  loadPanelState().then((state) => {
+  await loadPanelState().then((state) => {
     doc.addEventListener('keydown', (event) => {
       if (matchesShortcut(event, state.toggleShortcut)) {
         event.preventDefault();
@@ -83,6 +74,20 @@ export const mountInlinePanel = (client: PanelClient): InlinePanelHandle => {
       }
     });
   });
+
+  const container = host.attachShadow({ mode: 'open' });
+  render(
+    <PanelApp
+      client={client}
+      mode="inline"
+      canUsePlugin={canUsePlugin}
+      container={container}
+      onToggleReady={(fn) => {
+        toggle = fn;
+      }}
+    />,
+    container,
+  );
 
   return {
     toggle: () => toggle(),
