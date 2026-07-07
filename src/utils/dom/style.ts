@@ -27,12 +27,12 @@ export const injectStyle = (
 
   const style = isScriptManager() ? GM_addStyle(css) : createStyle(css);
 
-  if (!isScriptManager()) {
-    if (id) style.id = id;
+  if (id) style.id = id;
+  if (!isScriptManager() || target) {
     if (nonce) style.setAttribute('nonce', nonce);
 
     target.appendChild(style);
-  } else if (id) style.id = id;
+  }
 
   const remove = () => {
     style?.remove?.();

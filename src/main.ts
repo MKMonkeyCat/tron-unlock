@@ -4,6 +4,8 @@ import { initializeFeatures, manager, registry } from './feature';
 import { createPersistingLocalClient } from './ui/panel/client';
 import { mountInlinePanel } from './ui/panel/mount';
 
+import './style';
+
 const printArtLog = () => {
   const art = `%c
 ████████╗██████╗  ██████╗ ███╗   ██╗██╗   ██╗███╗   ██╗██╗      ██████╗  ██████╗ ██╗  ██╗
