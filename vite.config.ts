@@ -14,6 +14,9 @@ import zip from 'vite-plugin-zip-pack';
 // background.ts, panel) that share chunked code via ES module imports. For
 // the single-file Tampermonkey userscript build, see vite.config.userscript.ts.
 export default defineConfig({
+  define: {
+    'import.meta.env.ARCH': 'extension',
+  },
   plugins: [
     minifyCssHtmlPlugin(),
     minifyImportedRawCssPlugin(),

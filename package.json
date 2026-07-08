@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --config vite.config.userscript.ts",
+    "dev:extension": "nodemon -w extension -w src -w manifest.json -w vite.config.ts --ext tsx,css,html,ts,json --exec \"vite build --mode development\"",
     "build": "npm run build:extension && npm run build:userscript",
     "build:extension": "tsc && vite build",
     "build:userscript": "tsc && vite build --config vite.config.userscript.ts",
@@ -33,6 +34,7 @@
     "eslint-plugin-simple-import-sort": "^13.0.0",
     "html-minifier": "^4.0.0",
     "lightningcss": "^1.32.0",
+    "nodemon": "^3.1.14",
     "p-limit": "^7.3.0",
     "sass-embedded": "^1.100.0",
     "typescript": "~6.0.3",

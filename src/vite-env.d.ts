@@ -27,4 +27,9 @@ declare global {
   // interface Function {
   //   $inject?: readonly string[] | undefined;
   // }
+
+  interface ImportMetaEnv {
+    readonly ARCH: 'userscript' | 'extension';
+    // more env variables...
+  }
 }

@@ -39,6 +39,21 @@
             "description": "頁面載入完成前先隱藏捲軸，避免版面閃動。"
           }
         }
+      },
+      "style": {
+        "name": "樣式",
+        "features": {
+          "course": {
+            "name": "課程頁面樣式",
+            "description": "調整課程頁面版面，讓內容區塊更寬、字體更大。",
+            "fields": {}
+          },
+          "exam": {
+            "name": "考試頁面樣式",
+            "description": "調整考試頁面版面，讓內容區塊更寬、字體更大。",
+            "fields": {}
+          }
+        }
       }
     }
   }

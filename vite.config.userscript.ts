@@ -13,6 +13,9 @@ import { defineConfig } from 'vite';
 // the extension build (vite.config.ts), which shares chunks across multiple
 // entries and would not work if pasted directly into a userscript manager.
 export default defineConfig({
+  define: {
+    'import.meta.env.ARCH': 'userscript',
+  },
   plugins: [
     minifyCssHtmlPlugin(),
     minifyImportedRawCssPlugin(),

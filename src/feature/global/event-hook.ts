@@ -14,7 +14,7 @@ import {
 } from '@/hook';
 import { doc, injectStyle, jQuery, win } from '@/utils';
 
-import { createHumanLikePointerBehavior } from './level-detector';
+import { createHumanLikePointerBehavior } from './utils/level-detector';
 
 import type { GlobalGroupI18nType } from '.';
 
