@@ -194,6 +194,7 @@ export class FeatureManager {
 
     const test = feature.test;
 
+    if (test === route.pathname) return true;
     if ((test ?? true) === true) return true;
     if (test === false) return false;
     if (test instanceof RegExp) return test.test(route.pathname);

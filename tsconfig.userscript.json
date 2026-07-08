@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+
+  "compilerOptions": {
+    "types": ["vite/client", "tampermonkey", "jquery"]
+  },
+
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "plugin/**/*.ts",
+    "vite.config.userscript.ts",
+    "manifest.config.ts",
+    "const.ts"
+  ]
+}

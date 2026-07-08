@@ -121,6 +121,7 @@ export type Feature<
         route: RouteSnapshot,
       ) => MaybePromise<boolean>)
     | RegExp
+    | string
     | boolean;
   setup?: (
     ctx: FeatureContext<TState, TConfig, FI18n, TI18n>,

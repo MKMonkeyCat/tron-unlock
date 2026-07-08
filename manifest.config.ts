@@ -19,7 +19,7 @@ const manifestVersion = numericVersion
     : `${numericVersion}.${process.env.GITHUB_RUN_NUMBER ?? 0}`
   : '0.0.0';
 
-export default defineManifest({
+export default defineManifest((env) => ({
   manifest_version: 3,
   name: pkg.name,
   version: manifestVersion,
@@ -52,6 +52,10 @@ export default defineManifest({
     'storage', // for panel config persistence
     'tabs', // for video mute
   ],
+  // dev:extension's background worker long-polls this to auto-reload -
+  // only requested for dev builds so the shipped extension never asks for it.
+  host_permissions:
+    env.mode === 'development' ? ['http://127.0.0.1:5680/*'] : [],
   side_panel: {
     default_path: 'extension/panel/index.html',
   },
@@ -59,4 +63,4 @@ export default defineManifest({
     service_worker: 'extension/background.ts',
     type: 'module',
   },
-});
+}));

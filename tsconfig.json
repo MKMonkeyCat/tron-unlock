@@ -3,35 +3,25 @@
     "target": "es2023",
     "module": "esnext",
     "lib": ["ES2023", "DOM"],
+
     "moduleResolution": "bundler",
     "noEmit": true,
+
     "resolveJsonModule": true,
-    "types": ["vite/client"],
+
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+
+    "skipLibCheck": true,
+
     "paths": {
       "@": ["./src"],
       "@/*": ["./src/*"],
 
       "@@": ["./extension"],
-      "@@/*": ["./extension/*"],
-
-      /* Preact Config */
-      "react": ["./node_modules/preact/compat/"],
-      "react-dom": ["./node_modules/preact/compat/"]
-    },
-
-    /* Preact Config */
-    "jsx": "react-jsx",
-    "jsxImportSource": "preact",
-    "skipLibCheck": true
+      "@@/*": ["./extension/*"]
+    }
   },
-  "include": [
-    "src",
-    "extension",
-    "plugin",
-    "vite.config.ts",
-    "vite.config.userscript.ts",
-    "manifest.config.ts",
-    "const.ts"
-  ],
-  "exclude": ["./node_modules", "./dist"]
+
+  "exclude": ["node_modules", "dist"]
 }

@@ -1,3 +1,5 @@
+import { MK_BASE_CLASS, MK_SVG_CLASS } from '@/constants';
+
 const globalScope = globalThis as typeof globalThis & {
   unsafeWindow?: typeof globalThis;
   window?: typeof globalThis;
@@ -14,153 +16,106 @@ export const doc =
 
 export const body = doc?.body;
 
-type Child = string | Node | DOMKit<any>;
-
-export class DOMKit<T extends Element = Element> {
-  constructor(public el: T) {}
-
-  attr(name: string, value: string) {
-    this.el.setAttribute(name, value);
-    return this;
-  }
-
-  class(...cls: string[]) {
-    this.el.classList.add(...cls);
-    return this;
-  }
-
-  removeClass(...cls: string[]) {
-    this.el.classList.remove(...cls);
-    return this;
-  }
-
-  toggleClass(c: string) {
-    this.el.classList.toggle(c);
-    return this;
-  }
-
-  style(style: Partial<CSSStyleDeclaration>) {
-    Object.assign((this.el as unknown as HTMLElement).style, style);
-    return this;
-  }
-
-  append(...children: Child[]) {
-    for (const c of children) {
-      if (typeof c === 'string') {
-        this.el.appendChild(document.createTextNode(c));
-      } else if (c instanceof DOMKit) this.el.appendChild(c.el);
-      else this.el.appendChild(c);
+export const parseClass = (
+  ...classNames: (string | string[] | undefined)[]
+): string[] => {
+  return classNames.flatMap((className) => {
+    if (typeof className === 'string') {
+      return className.trim().split(/\s+/).filter(Boolean);
     }
-    return this;
-  }
+    return className || [];
+  });
+};
 
-  on<K extends keyof HTMLElementEventMap>(
-    event: K,
-    fn: (e: HTMLElementEventMap[K]) => void,
-  ) {
-    this.el.addEventListener(event, fn as any);
-    return this;
-  }
+export const createElement = <K extends keyof HTMLElementTagNameMap>(
+  tagName: K,
+  ...className: (string | string[])[]
+): HTMLElementTagNameMap[K] => {
+  const element = document.createElement(tagName);
+  element.classList.add(MK_BASE_CLASS, ...parseClass(...className));
+  return element;
+};
 
-  off<K extends keyof HTMLElementEventMap>(event: K, fn: any) {
-    this.el.removeEventListener(event, fn);
-    return this;
-  }
+export const createSvgFromString = (
+  svgString: string,
+  className?: string | string[],
+): SVGSVGElement => {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(svgString, 'image/svg+xml');
+  const svgElement = doc.documentElement as unknown as SVGSVGElement;
 
-  text(v?: string) {
-    if (v === undefined) return this.el.textContent ?? '';
-    this.el.textContent = v;
-    return this;
-  }
+  svgElement.classList.add(
+    ...parseClass(className),
+    MK_BASE_CLASS,
+    MK_SVG_CLASS,
+  );
 
-  find<T extends Element = Element>(sel: string) {
-    return $$<T>(sel, this.el);
-  }
-}
+  return svgElement;
+};
 
-export const $$ = <T extends Element = Element>(
+export const waitElement = <T extends Element = Element>(
   selector: string,
-  root: ParentNode = doc!,
-) => new DOMList([...root.querySelectorAll(selector)] as T[]);
+  options: {
+    root?: ParentNode | null;
+    timeout?: number;
+    signal?: AbortSignal;
+  } = {},
+): Promise<T> => {
+  const { root = doc, timeout = 60_000, signal } = options;
 
-export class DOMList<T extends Element = Element> {
-  constructor(public els: T[]) {}
+  return new Promise<T>((resolve, reject) => {
+    if (!root) {
+      reject(new Error('waitElement: no document/root available'));
+      return;
+    }
 
-  each(fn: (el: T, i: number) => void) {
-    this.els.forEach(fn);
-    return this;
-  }
+    // Already present?
+    const existing = root.querySelector<T>(selector);
+    if (existing) {
+      resolve(existing);
+      return;
+    }
 
-  addClass(c: string) {
-    return this.each((el) => el.classList.add(c));
-  }
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
-  removeClass(c: string) {
-    return this.each((el) => el.classList.remove(c));
-  }
+    const cleanup = () => {
+      observer.disconnect();
+      if (timeoutId !== undefined) clearTimeout(timeoutId);
+      signal?.removeEventListener('abort', onAbort);
+    };
 
-  on<K extends keyof HTMLElementEventMap>(
-    event: K,
-    fn: (e: HTMLElementEventMap[K]) => void,
-  ) {
-    return this.each((el) => el.addEventListener(event, fn as any));
-  }
+    const onAbort = () => {
+      cleanup();
+      reject(new Error(`waitElement: aborted while waiting for "${selector}"`));
+    };
 
-  text(v?: string) {
-    if (v === undefined) return this.els[0]?.textContent ?? '';
-    return this.each((el) => (el.textContent = v));
-  }
-}
+    const observer = new MutationObserver(() => {
+      const el = root.querySelector<T>(selector);
+      if (el) {
+        cleanup();
+        resolve(el);
+      }
+    });
 
-// type Listener = () => void;
+    observer.observe(
+      // MutationObserver needs a Node; ParentNode covers Document/Element/DocumentFragment
+      root as unknown as Node,
+      { childList: true, subtree: true },
+    );
 
-// class I18n {
-//   private lang = 'en';
-//   private dict: Record<string, Record<string, string>> = {};
-//   private listeners = new Set<Listener>();
+    if (timeout > 0) {
+      timeoutId = setTimeout(() => {
+        cleanup();
+        reject(new Error(`waitElement: timed out waiting for "${selector}"`));
+      }, timeout);
+    }
 
-//   setLang(lang: string) {
-//     this.lang = lang;
-//     this.emit();
-//   }
-
-//   setDict(dict: Record<string, Record<string, string>>) {
-//     this.dict = dict;
-//   }
-
-//   t(key: string) {
-//     return this.dict[this.lang]?.[key] ?? key;
-//   }
-
-//   subscribe(fn: Listener) {
-//     this.listeners.add(fn);
-//     return () => this.listeners.delete(fn);
-//   }
-
-//   private emit() {
-//     this.listeners.forEach((fn) => fn());
-//   }
-// }
-
-// export const i18n = new I18n();
-
-// class TextBinding {
-//   #node: Text;
-//   #key: string;
-//   #unsub: () => void;
-
-//   constructor(key: string) {
-//     this.#key = key;
-//     this.#node = document.createTextNode(i18n.t(key));
-
-//     this.#unsub = i18n.subscribe(() => {
-//       this.#node.textContent = i18n.t(this.#key);
-//     });
-//   }
-
-//   getNode() {
-//     return this.#node;
-//   }
-// }
-
-// export const $t = (key: string): Node => new TextBinding(key).getNode();
+    if (signal) {
+      if (signal.aborted) {
+        onAbort();
+        return;
+      }
+      signal.addEventListener('abort', onAbort);
+    }
+  });
+};

@@ -3,6 +3,7 @@ export * from './dom';
 export * from './format';
 export * from './lib';
 export * from './type';
+export * from './version';
 
 export const clamp = (v: number, min: number, max: number) => {
   return Math.max(min, Math.min(max, v));

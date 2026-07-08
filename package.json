@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite --config vite.config.userscript.ts",
-    "dev:extension": "nodemon -w extension -w src -w manifest.json -w vite.config.ts --ext tsx,css,html,ts,json --exec \"vite build --mode development\"",
+    "dev:extension": "node scripts/dev-extension.mjs",
     "build": "npm run build:extension && npm run build:userscript",
-    "build:extension": "tsc && vite build",
+    "build:extension": "tsc && vite build --config vite.config.extension.ts",
     "build:userscript": "tsc && vite build --config vite.config.userscript.ts",
     "preview": "vite preview",
     "lint": "eslint . --ext .ts",

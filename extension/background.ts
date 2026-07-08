@@ -2,7 +2,17 @@ import type { RelayToPageMessage } from '@/core/runtime';
 import { MK_BRIDGE_MARKER } from '@/core/runtime';
 import { createStorage } from '@/core/storage';
 
+import { initDevReload } from './dev-reload';
 import { registerHandlers } from './messaging/messenger';
+
+// Static import, not `import('./dev-reload')`: a dynamic import here makes
+// Vite split it into its own chunk and inject a browser-only modulePreload
+// helper (`document.getElementsByTagName('link')`) into this chunk, which
+// throws in the service worker (no `document`). Static import inlines it
+// instead, and the runtime check below still keeps it inert in production.
+if (import.meta.env.MODE === 'development') {
+  void initDevReload();
+}
 
 export interface ExtensionMessages {
   TOGGLE_MUTE: [{ muted: boolean }, { success: boolean }];
@@ -11,19 +21,19 @@ export interface ExtensionMessages {
 
 const panelStore = createStorage({ namespace: 'mk-panel' });
 
-chrome.runtime.onInstalled.addListener((opt) => {
-  if (opt.reason === 'install') {
-    chrome.tabs.create({
-      active: true,
-      url: chrome.runtime.getURL('welcome/index.html'),
-    });
-  } else if (opt.reason === 'update') {
-    chrome.tabs.create({
-      active: true,
-      url: chrome.runtime.getURL('changelog/index.html'),
-    });
-  }
-});
+// chrome.runtime.onInstalled.addListener((opt) => {
+//   if (opt.reason === 'install') {
+//     chrome.tabs.create({
+//       active: true,
+//       url: chrome.runtime.getURL('welcome/index.html'),
+//     });
+//   } else if (opt.reason === 'update') {
+//     chrome.tabs.create({
+//       active: true,
+//       url: chrome.runtime.getURL('changelog/index.html'),
+//     });
+//   }
+// });
 
 chrome.action.onClicked.addListener(async (tab) => {
   if (!tab.id) return;
