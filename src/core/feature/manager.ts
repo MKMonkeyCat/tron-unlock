@@ -72,6 +72,7 @@ export class FeatureManager {
       enabled: this.#overrides.get(feature.id) ?? this.#running.has(feature.id),
       config: this.#configs.get(feature.id) ?? feature.defaultConfig ?? {},
       fields: feature.fields ?? [],
+      needPageReload: feature.needPageReload ?? false,
     }));
   }
 

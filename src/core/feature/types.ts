@@ -84,6 +84,7 @@ export interface FeatureSnapshot<TConfig extends ConfigData = ConfigData> {
   enabled: boolean;
   config: TConfig;
   fields: FeatureSchemaField<string, any>[];
+  needPageReload: boolean;
 }
 
 export type AnyFeature = Feature<FeatureId, any, any>;
@@ -108,12 +109,17 @@ export type Feature<
 > = {
   id: TId;
 
+  default?: boolean; // default: true
+
   category: FeatureCategoryId;
   group?: FeatureGroupId;
 
   state?: TState;
 
   defaultConfig?: TConfig;
+
+  // default: false
+  needPageReload?: boolean;
 
   test?:
     | ((

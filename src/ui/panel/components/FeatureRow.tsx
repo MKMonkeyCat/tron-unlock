@@ -1,3 +1,5 @@
+import { SvgRefresh } from '@/assets/icons';
+
 import { Field } from './Field';
 import type { PanelFeatureItem } from '../client';
 
@@ -16,7 +18,19 @@ export const FeatureRow = ({
     <div class="mk-panel-row">
       <div class="mk-panel-row-main">
         <div class="mk-panel-row-text">
-          <div class="mk-panel-row-name">{item.label.name}</div>
+          <div class="mk-panel-row-name">
+            {item.label.name}
+            {item.needPageReload ? (
+              <span class="mk-panel-tooltip mk-panel-reload-badge">
+                <span class="mk-panel-tooltip-icon" tabIndex={0}>
+                  <SvgRefresh />
+                </span>
+                <span class="mk-panel-tooltip-content">
+                  變更此設定後，需重新整理頁面才會生效
+                </span>
+              </span>
+            ) : null}
+          </div>
           {item.label.description ? (
             <div class="mk-panel-row-desc">{item.label.description}</div>
           ) : null}
